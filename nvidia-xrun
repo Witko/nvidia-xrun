@@ -1,0 +1,75 @@
+#!/bin/bash
+function printHelp {
+  echo "Utility to run games and applications in separate X on discrete Nvidia graphic card"
+  echo "Usage: "
+  echo "nvidia-xrun [<options>] <app>"
+  echo "Options: "
+  echo "  -d    Dry run - prints the final command but does not execute it"
+}
+
+DRY_RUN=0
+
+if [[ $EUID -eq 0 ]]; then
+   echo "This script must not be run as root" >&2
+   exit 1
+fi
+
+if [ "$1" == "-d" ]
+  then
+    DRY_RUN=1
+    shift 1
+fi
+
+if [ $# -eq 0 ]
+  then
+    printHelp
+    exit 1
+fi
+
+# calculate current VT
+LVT=`fgconsole`
+
+# calculate first usable display
+XNUM="-1"
+SOCK="something"
+while [ ! -z "$SOCK" ] 
+do
+  XNUM=$(( $XNUM + 1 ))
+  SOCK=$(ls -A -1 /tmp/.X11-unix | grep "X$XNUM" )
+done
+
+NEWDISP=":$XNUM"
+
+if [ ! -z "$*" ] # generate exec line if arguments are given
+then 
+  # test if executable exists
+  if [ ! -x "$(which $1 2> /dev/null)" ] 
+  then
+    echo "$1: No such executable!"
+    exit 1
+  fi
+  # generate exec line
+  EXECL="$(which $1)"
+  shift 1
+  EXECL="$EXECL $*"
+  EXECPH=""
+else # prepare to start new X sessions if no arguments passed
+  EXECL=""
+  EXECPH="New X session"
+fi
+
+USER=$(whoami)
+EXECL="/etc/X11/xinit/nvidia-xinitrc $USER $EXECL"
+
+COMMAND="sudo xinit $EXECL -- $NEWDISP vt$LVT -nolisten tcp -br -config nvidia-xorg.conf -configdir nvidia-xorg.conf.d"
+if [ $DRY_RUN -eq 1 ]
+  then
+  echo "Dry run - nothing executed"
+  echo "Command: $COMMAND"
+else
+  sudo tee /proc/acpi/bbswitch <<<ON
+  sudo modprobe nvidia
+  $($COMMAND)
+  sudo rmmod nvidia
+  sudo tee /proc/acpi/bbswitch <<<OFF
+fi
