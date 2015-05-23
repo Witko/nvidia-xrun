@@ -1,0 +1,13 @@
+#!/bin/bash
+export LD_LIBRARY_PATH=/usr/lib64/nvidia/:/usr/lib32/nvidia:/usr/lib:$LD_LIBRARY_PATH
+xrandr --setprovideroutputsource modesetting NVIDIA-0
+xrandr --auto
+
+USER=$1
+shift 1
+if [ $# -eq 0 ]
+  then
+    su $USER -c xterm
+else
+    su $USER -c $*  
+fi
