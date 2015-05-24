@@ -1,6 +1,6 @@
 # nvidia-xrun
 These utility scripts aim to make the life easier for nvidia cards users.
-It started with a revelation that bumblebee in current state offers very poor performance. This solution offers a bit more complicated procedure but a full GPU utilization(in terms of linux drivers)
+It started with a revelation that bumblebee in current state offers very poor performance. This solution offers a bit more complicated procedure but offers a full GPU utilization(in terms of linux drivers)
 
 ## Usage: 
   1) switch to free tty
