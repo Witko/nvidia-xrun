@@ -1,4 +1,5 @@
 #!/bin/bash
+DRY_RUN=0
 function printHelp {
   echo "Utility to run games and applications in separate X on discrete Nvidia graphic card"
   echo "Usage: "
@@ -7,7 +8,15 @@ function printHelp {
   echo "  -d    Dry run - prints the final command but does not execute it"
 }
 
-DRY_RUN=0
+function execute {
+  if [ $DRY_RUN -eq 1 ]
+    then
+    echo ">>Dry run. Command: $*"
+  else
+    eval $*
+  fi
+}
+
 
 if [[ $EUID -eq 0 ]]; then
    echo "This script must not be run as root" >&2
@@ -58,18 +67,17 @@ else # prepare to start new X sessions if no arguments passed
   EXECPH="New X session"
 fi
 
-USER=$(whoami)
-EXECL="/etc/X11/xinit/nvidia-xinitrc $USER $EXECL"
+EXECL="/etc/X11/xinit/nvidia-xinitrc $EXECL"
 
-COMMAND="sudo xinit $EXECL -- $NEWDISP vt$LVT -nolisten tcp -br -config nvidia-xorg.conf -configdir nvidia-xorg.conf.d"
-if [ $DRY_RUN -eq 1 ]
-  then
-  echo "Dry run - nothing executed"
-  echo "Command: $COMMAND"
-else
-  sudo tee /proc/acpi/bbswitch <<<ON
-  sudo modprobe nvidia
-  $($COMMAND)
-  sudo rmmod nvidia
-  sudo tee /proc/acpi/bbswitch <<<OFF
-fi
+COMMAND="xinit $EXECL -- $NEWDISP vt$LVT -nolisten tcp -br -config nvidia-xorg.conf -configdir nvidia-xorg.conf.d"
+
+echo 'Waking up nvidia GPU'
+execute "sudo tee /proc/acpi/bbswitch <<<ON"
+echo 'Loading nvidia module'
+execute "sudo modprobe nvidia"
+execute $COMMAND
+echo 'Unloading nvidia module'
+execute "sudo rmmod nvidia"
+echo 'Turning off nvidia GPU'
+execute "sudo tee /proc/acpi/bbswitch <<<OFF"
+
