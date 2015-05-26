@@ -12,5 +12,4 @@ It started with a revelation that bumblebee in current state offers very poor pe
   4) enjoy
   
   
-  Currently sudo is required as the Xorg server must be run as root fo ModulePath to be taken into account.
-  Also bbswitch is used to prepare the card and then perform a cleanup.
+  Currently sudo is required as the script needs to wake up GPU, modprobe the nvidia driver and then perform cleanup afterwards. For this we use bbswitch.
