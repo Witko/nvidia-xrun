@@ -12,4 +12,4 @@ It started with a revelation that bumblebee in current state offers very poor pe
   4) enjoy
   
   
-  Currently sudo is required as the script needs to wake up GPU, modprobe the nvidia driver and then perform cleanup afterwards. For this we use bbswitch.
+  Currently sudo is required as the script needs to wake up GPU, modprobe the nvidia driver and perform cleanup afterwards. For this we use bbswitch.
