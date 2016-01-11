@@ -13,3 +13,6 @@ It started with a revelation that bumblebee in current state offers very poor pe
   
   
   Currently sudo is required as the script needs to wake up GPU, modprobe the nvidia driver and perform cleanup afterwards. For this we use bbswitch.
+  
+## Aur package
+the aur package can be found here: https://aur.archlinux.org/packages/nvidia-xrun/
