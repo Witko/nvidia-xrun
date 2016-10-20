@@ -3,7 +3,7 @@ DRY_RUN=0
 function printHelp {
   echo "Utility to run games and applications in separate X on discrete Nvidia graphic card"
   echo "Usage: "
-  echo "nvidia-xrun [<options>] <app>"
+  echo "nvidia-xrun [<options>] [<app>]"
   echo "Options: "
   echo "  -d    Dry run - prints the final command but does not execute it"
 }
@@ -27,12 +27,6 @@ if [ "$1" == "-d" ]
   then
     DRY_RUN=1
     shift 1
-fi
-
-if [ $# -eq 0 ]
-  then
-    printHelp
-    exit 1
 fi
 
 # calculate current VT
@@ -82,14 +76,14 @@ execute "sudo modprobe nvidia_drm"
 
 execute $COMMAND
 
-echo 'Unloading nvidia module'
-execute "sudo rmmod nvidia"
+echo 'Unloading nvidia_drm module'
+execute "sudo rmmod nvidia_drm"
 
 echo 'Unloading nvidia_modeset module'
 execute "sudo rmmod nvidia_modeset"
 
-echo 'Unloading nvidia_drm module'
-execute "sudo rmmod nvidia_drm"
+echo 'Unloading nvidia module'
+execute "sudo rmmod nvidia"
 
 echo 'Turning off nvidia GPU'
 execute "sudo tee /proc/acpi/bbswitch <<<OFF"
