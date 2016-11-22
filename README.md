@@ -44,6 +44,10 @@ For convenience you can create `nano ~/.nvidia-xinitrc` and put there your favou
 
     openbox-session
     
+With this you do not need to specify the app and you can simply run:
+
+    nvidia-xrun
+    
 ## Aur package
 The aur package can be found here: https://aur.archlinux.org/packages/nvidia-xrun/
 
