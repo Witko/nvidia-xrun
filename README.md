@@ -4,11 +4,11 @@ It started with a revelation that bumblebee in current state offers very poor pe
 
 ## Usage: 
   1. switch to free tty
-  2. login
-  3. run _nvidia-xrun_ [_app_]
-  4. enjoy
-  
-  Currently sudo is required as the script needs to wake up GPU, modprobe the nvidia driver and perform cleanup afterwards. For this we use bbswitch.
+  1. login
+  1. run `nvidia-xrun [app]`
+  1. enjoy
+
+Currently sudo is required as the script needs to wake up GPU, modprobe the nvidia driver and perform cleanup afterwards. For this we use bbswitch.
 
 ## Structure
 * **nvidia-xrun** - uses following dir structure:
@@ -22,7 +22,7 @@ It started with a revelation that bumblebee in current state offers very poor pe
 
 ## Setting the right bus id
 Usually the 1:0:0 bus is correct. If this is not your case(you can find out through lspci or bbswitch output mesages) you can create
-a conf script in /etc/X11/nvidia-xorg.conf.d to set the proper bus id
+a conf script for example `nano /etc/X11/nvidia-xorg.conf.d/30-nvidia.conf` to set the proper bus id:
 
     Section "Device"
         Identifier "nvidia"
@@ -39,11 +39,16 @@ Also this way you can adjust some nvidia settings if you encounter issues:
         #  Option "UseDisplayDevice" "none"
     EndSection
     
+## Automatically run window manager
+For convenience you can create `nano ~/.nvidia-xinitrc` and put there your favourite window manager:
+
+    openbox-session
+    
 ## Aur package
-the aur package can be found here: https://aur.archlinux.org/packages/nvidia-xrun/
+The aur package can be found here: https://aur.archlinux.org/packages/nvidia-xrun/
 
 
 ## Troubleshooting
 ### Steam issues
-Yes unfortunately this does not work well - I recommend to use some window manager like openbox
+Yes unfortunately running Steam directly with nvidia-xrun does not work well - I recommend to use some window manager like openbox.
 # 
