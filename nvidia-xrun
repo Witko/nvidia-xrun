@@ -1,4 +1,5 @@
 #!/bin/bash
+
 DRY_RUN=0
 function printHelp {
   echo "Utility to run games and applications in separate X on discrete Nvidia graphic card"
@@ -17,72 +18,57 @@ function execute {
   fi
 }
 
-
-if [[ $EUID -eq 0 ]]; then
-   echo "This script must not be run as root" >&2
-   exit 1
-fi
-
 if [ "$1" == "-d" ]
   then
     DRY_RUN=1
     shift 1
 fi
 
-# calculate current VT
-LVT=`fgconsole`
-
-# calculate first usable display
-XNUM="-1"
-SOCK="something"
-while [ ! -z "$SOCK" ] 
-do
-  XNUM=$(( $XNUM + 1 ))
-  SOCK=$(ls -A -1 /tmp/.X11-unix | grep "X$XNUM" )
-done
-
-NEWDISP=":$XNUM"
-
-if [ ! -z "$*" ] # generate exec line if arguments are given
-then 
-  # test if executable exists
-  if [ ! -x "$(which $1 2> /dev/null)" ] 
-  then
-    echo "$1: No such executable!"
-    exit 1
-  fi
-  # generate exec line
-  EXECL="$(which $1)"
-  shift 1
-  EXECL="$EXECL $*"
-  EXECPH=""
-else # prepare to start new X sessions if no arguments passed
-  EXECL=""
-  EXECPH="New X session"
+## check if script is running through sudo/su or directly from root user
+if [[ ${SUDO_USER:-$USER} == "root" ]]; then
+   if [[ "$SUDO_USER" == "" ]]; then	
+      echo "Do not run it direclty from root user!";
+      echo "Run it from a normal user and use sudo or su instead.";
+   fi
+   exit 1;
 fi
 
-EXECL="/etc/X11/xinit/nvidia-xinitrc $EXECL"
+## check if script is running through X
+if [[ $DISPLAY != "" && `tty` == "/dev/pts/0" ]]; then
+   execute "sudo -i openvt -s nvidia-xrun $*"
+   if [[ $DRY_RUN == "1" ]]; then
+      exit 0;
+   fi
+fi
 
-COMMAND="xinit $EXECL -- $NEWDISP vt$LVT -nolisten tcp -br -config nvidia-xorg.conf -configdir nvidia-xorg.conf.d"
+## check if does have necessary permission
+if [[ $EUID != "0" ]]; then
+   execute "sudo -i nvidia-xrun $*"
+   exit 0;
+fi
 
-# --------- TURNING ON GPU -----------
+## check current vt in use
+[[ $(< '/sys/class/tty/tty0/active') =~ tty([0-9]{1,}) ]]
+LVT=${BASH_REMATCH[1]}
+
+
+
 echo 'Waking up nvidia GPU'
 execute "sudo tee /proc/acpi/bbswitch <<<ON"
 
-# ---------- LOADING MODULES ----------
 echo 'Loading nvidia module'
 execute "sudo modprobe nvidia"
-
-echo 'Loading nvidia_modeset module'
-execute "sudo modprobe nvidia_modeset"
 
 echo 'Loading nvidia_drm module'
 execute "sudo modprobe nvidia_drm"
 
-# ---------- EXECUTING COMMAND --------
-execute $COMMAND
 
-# ---------- UNLOADING MODULES --------
+
+echo 'Executing the nvidia-xrun-core'
+execute "sudo -i -u ${SUDO_USER:-$USER} nvidia-xrun-core $*"
+
+
+
 echo 'Unloading nvidia_drm module'
 execute "sudo rmmod nvidia_drm"
 
@@ -92,9 +78,11 @@ execute "sudo rmmod nvidia_modeset"
 echo 'Unloading nvidia module'
 execute "sudo rmmod nvidia"
 
-# --------- TURNING OFF GPU ----------
 echo 'Turning off nvidia GPU'
 execute "sudo tee /proc/acpi/bbswitch <<<OFF"
 
 echo -n 'Current state of nvidia GPU: '
 execute "cat /proc/acpi/bbswitch"
+
+## change to the previous vt
+chvt $LVT

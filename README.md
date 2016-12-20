@@ -3,8 +3,6 @@ These utility scripts aim to make the life easier for nvidia cards users.
 It started with a revelation that bumblebee in current state offers very poor performance. This solution offers a bit more complicated procedure but offers a full GPU utilization(in terms of linux drivers)
 
 ## Usage: 
-  1. switch to free tty
-  1. login
   1. run `nvidia-xrun [app]`
   1. enjoy
 
@@ -13,6 +11,7 @@ Currently sudo is required as the script needs to wake up GPU, modprobe the nvid
 ## Structure
 * **nvidia-xrun** - uses following dir structure:
 * **/usr/bin/nvidia-xrun** - the executable script
+* **/usr/bin/nvidia-xrun-core** - the script core
 * **/etc/X11/nvidia-xorg.conf** - the main X confing file
 * **/etc/X11/xinit/nvidia-xinitrc** - xinitrc config file. Contains the setting of provider output source
 * **/etc/X11/xinit/nvidia-xinitrc.d** - custom xinitrc scripts directory

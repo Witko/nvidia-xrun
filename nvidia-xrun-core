@@ -1,0 +1,48 @@
+#!/bin/bash
+
+## nvidia-xrun-core
+
+if [[ $EUID -eq 0 ]]; then
+   echo "This script must not be run as root" >&2
+   exit 1
+fi
+
+# calculate current VT
+[[ $(< '/sys/class/tty/tty0/active') =~ tty([0-9]{1,}) ]]
+LVT=${BASH_REMATCH[1]}
+
+# calculate first usable display
+XNUM="-1"
+SOCK="something"
+while [ ! -z "$SOCK" ] 
+do
+  XNUM=$(( $XNUM + 1 ))
+  SOCK=$(ls -A -1 /tmp/.X11-unix | grep "X$XNUM" )
+done
+
+if [ ! -z "$*" ] # generate exec line if arguments are given
+then 
+  # test if executable exists
+  if [ ! -x "$(which $1 2> /dev/null)" ] 
+  then
+    echo "$1: No such executable!"
+    exit 1
+  fi
+  # generate exec line
+  EXECL="$(which $1)"
+  shift 1
+  EXECL="$EXECL $*"
+  EXECPH=""
+else # prepare to start new X sessions if no arguments passed
+  EXECL=""
+  EXECPH="New X session"
+fi
+
+NEWDISP=":$XNUM"
+
+EXECL="/etc/X11/xinit/nvidia-xinitrc $EXECL"
+
+COMMAND="xinit $EXECL -- $NEWDISP vt$LVT -nolisten tcp -br -config nvidia-xorg.conf -configdir nvidia-xorg.conf.d"
+
+
+exec $COMMAND
