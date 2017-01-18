@@ -67,7 +67,8 @@ COMMAND="xinit $EXECL -- $NEWDISP vt$LVT -nolisten tcp -br -config nvidia-xorg.c
 
 # --------- TURNING ON GPU -----------
 echo 'Waking up nvidia GPU'
-if ! [ -f /proc/acpi/bbswitch ] then
+if ! [ -f /proc/acpi/bbswitch ] 
+then
   execute "sudo modprobe bbswitch"
 fi
 execute "sudo tee /proc/acpi/bbswitch <<<ON"
@@ -96,7 +97,8 @@ echo 'Unloading nvidia module'
 execute "sudo rmmod nvidia"
 
 # --------- TURNING OFF GPU ----------
-if [ -f /proc/acpi/bbswitch ] then
+if [ -f /proc/acpi/bbswitch ] 
+then
   echo 'Turning off nvidia GPU'
   execute "sudo tee /proc/acpi/bbswitch <<<OFF"
 
