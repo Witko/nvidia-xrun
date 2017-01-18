@@ -68,7 +68,7 @@ COMMAND="xinit $EXECL -- $NEWDISP vt$LVT -nolisten tcp -br -config nvidia-xorg.c
 # --------- TURNING ON GPU -----------
 echo 'Waking up nvidia GPU'
 if ! [ -f /proc/acpi/bbswitch ] then
-  execute sudo modprobe bbswitch
+  execute "sudo modprobe bbswitch"
 fi
 execute "sudo tee /proc/acpi/bbswitch <<<ON"
 
