@@ -22,6 +22,8 @@ if [ -f "$usermodmap" ]; then
     xmodmap "$usermodmap"
 fi
 
+export LD_LIBRARY_PATH=/usr/lib64/nvidia/:/usr/lib32/nvidia:/usr/lib:${LD_LIBRARY_PATH}
+
 # load additional configs
 if [ -d /etc/X11/xinit/nvidia-xinitrc.d ] ; then
  for f in /etc/X11/xinit/nvidia-xinitrc.d/?*.sh ; do
@@ -30,7 +32,6 @@ if [ -d /etc/X11/xinit/nvidia-xinitrc.d ] ; then
  unset f
 fi
 
-export LD_LIBRARY_PATH=/usr/lib64/nvidia/:/usr/lib32/nvidia:/usr/lib:${LD_LIBRARY_PATH}
 xrandr --setprovideroutputsource modesetting NVIDIA-0
 xrandr --auto
 
