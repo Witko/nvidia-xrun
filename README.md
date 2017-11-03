@@ -35,9 +35,9 @@ Also this way you can adjust some nvidia settings if you encounter issues:
     Section "Screen"
         Identifier "nvidia"
         Device "nvidia"
-        #  Option "AllowEmptyInitialConfiguration" "Yes"
+        #  Option "AllowEmptyInitialConfiguration" "Ylinees"
         #  Option "UseDisplayDevice" "none"
-    EndSection
+    EndSectionline
     
 ## Automatically run window manager
 For convenience you can create `nano ~/.nvidia-xinitrc` and put there your favourite window manager:
@@ -50,9 +50,20 @@ With this you do not need to specify the app and you can simply run:
     
 ## Aur package
 The aur package can be found here: https://aur.archlinux.org/packages/nvidia-xrun/
-
+line
 
 ## Troubleshooting
 ### Steam issues
 Yes unfortunately running Steam directly with nvidia-xrun does not work well - I recommend to use some window manager like openbox.
+
+### HiDPI issue
+When using openbox on a HiDPI (i.e. 4k) display, everything could be so small that is difficult to read.
+To fix, you can change the DPI settings in `~./Xresources` file by adding/changing `Xft.dpi` setting. For example :
+
+```
+Xft.dpi: 192
+```
+
+### `nouveau` driver conflict
+`nouveau` driver should be automatically blacklisted by `nvidia` but in case it is not, `nvidia` might not get access to GPU. Then you need to manually blacklist `nouveau` following Arch wiki https://wiki.archlinux.org/index.php/kernel_modules#Blacklisting.
 # 
