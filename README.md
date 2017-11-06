@@ -65,4 +65,16 @@ Xft.dpi: 192
 
 ### `nouveau` driver conflict
 `nouveau` driver should be automatically blacklisted by `nvidia` but in case it is not, `nvidia` might not get access to GPU. Then you need to manually blacklist `nouveau` following Arch wiki https://wiki.archlinux.org/index.php/kernel_modules#Blacklisting.
-# 
+
+### avoid `nvidia` driver to load on boot
+`nvidia` driver may load itself on boot, then `nvidia-xrun` will fail to start Xorg session.
+To avoid that, you should blacklist it (see link above).
+Also sometimes, blacklisting is not enough and you should use some hack to really avoid it to load.
+For example, adding `install nvidia /bin/false` to `/etc/modprobe.d/nvidia.conf` will make every load to fail.
+In that case, you should add `--ignore-install` to `modprobe` calls in `nvidia-xrun` script.
+
+### avoid `nvidia` driver to load on boot
+`nvidia` driver may load itself on boot, to avoid that, you should blacklist it (see link above).
+Also sometimes, blacklisting is not enough and you should use some hack to really avoid it to load.
+For example, adding `install nvidia /bin/false` to `/etc/modprobe.d/nvidia.conf` will make every load to fail.
+In that case, you should add `--ignore-install` to `modprobe` calls in `nvidia-xrun` script.
