@@ -35,9 +35,9 @@ Also this way you can adjust some nvidia settings if you encounter issues:
     Section "Screen"
         Identifier "nvidia"
         Device "nvidia"
-        #  Option "AllowEmptyInitialConfiguration" "Ylinees"
+        #  Option "AllowEmptyInitialConfiguration" "Yes"
         #  Option "UseDisplayDevice" "none"
-    EndSectionline
+    EndSection
     
 ## Automatically run window manager
 For convenience you can create `nano ~/.nvidia-xinitrc` and put there your favourite window manager:
@@ -50,7 +50,6 @@ With this you do not need to specify the app and you can simply run:
     
 ## Aur package
 The aur package can be found here: https://aur.archlinux.org/packages/nvidia-xrun/
-line
 
 ## Troubleshooting
 ### Steam issues
