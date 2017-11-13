@@ -51,8 +51,30 @@ With this you do not need to specify the app and you can simply run:
 ## Aur package
 The aur package can be found here: https://aur.archlinux.org/packages/nvidia-xrun/
 
-
 ## Troubleshooting
 ### Steam issues
 Yes unfortunately running Steam directly with nvidia-xrun does not work well - I recommend to use some window manager like openbox.
-# 
+
+### HiDPI issue
+When using openbox on a HiDPI (i.e. 4k) display, everything could be so small that is difficult to read.
+To fix, you can change the DPI settings in `~./Xresources` file by adding/changing `Xft.dpi` setting. For example :
+
+```
+Xft.dpi: 192
+```
+
+### `nouveau` driver conflict
+`nouveau` driver should be automatically blacklisted by `nvidia` but in case it is not, `nvidia` might not get access to GPU. Then you need to manually blacklist `nouveau` following Arch wiki https://wiki.archlinux.org/index.php/kernel_modules#Blacklisting.
+
+### avoid `nvidia` driver to load on boot
+`nvidia` driver may load itself on boot, then `nvidia-xrun` will fail to start Xorg session.
+To avoid that, you should blacklist it (see link above).
+Also sometimes, blacklisting is not enough and you should use some hack to really avoid it to load.
+For example, adding `install nvidia /bin/false` to `/etc/modprobe.d/nvidia.conf` will make every load to fail.
+In that case, you should add `--ignore-install` to `modprobe` calls in `nvidia-xrun` script.
+
+### avoid `nvidia` driver to load on boot
+`nvidia` driver may load itself on boot, to avoid that, you should blacklist it (see link above).
+Also sometimes, blacklisting is not enough and you should use some hack to really avoid it to load.
+For example, adding `install nvidia /bin/false` to `/etc/modprobe.d/nvidia.conf` will make every load to fail.
+In that case, you should add `--ignore-install` to `modprobe` calls in `nvidia-xrun` script.
