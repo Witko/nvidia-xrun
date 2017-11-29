@@ -73,8 +73,3 @@ Also sometimes, blacklisting is not enough and you should use some hack to reall
 For example, adding `install nvidia /bin/false` to `/etc/modprobe.d/nvidia.conf` will make every load to fail.
 In that case, you should add `--ignore-install` to `modprobe` calls in `nvidia-xrun` script.
 
-### avoid `nvidia` driver to load on boot
-`nvidia` driver may load itself on boot, to avoid that, you should blacklist it (see link above).
-Also sometimes, blacklisting is not enough and you should use some hack to really avoid it to load.
-For example, adding `install nvidia /bin/false` to `/etc/modprobe.d/nvidia.conf` will make every load to fail.
-In that case, you should add `--ignore-install` to `modprobe` calls in `nvidia-xrun` script.
