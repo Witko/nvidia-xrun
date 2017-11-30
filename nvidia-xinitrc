@@ -36,10 +36,9 @@ xrandr --setprovideroutputsource modesetting NVIDIA-0
 xrandr --auto
 
 if [ -f "$userxinitrc" ]; then
-    sh ${userxinitrc}
-fi
-
-if [ $# -gt 0 ]
-  then
- $*
+    sh ${userxinitrc} $#
+else
+    if [ $# -gt 0 ]; then
+ 		$*
+	fi
 fi
