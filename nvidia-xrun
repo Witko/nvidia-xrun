@@ -9,7 +9,7 @@ function printHelp {
 }
 
 function execute {
-  if [ $DRY_RUN -eq 1 ]
+  if [ ${DRY_RUN} -eq 1 ]
     then
     echo ">>Dry run. Command: $*"
   else
@@ -55,10 +55,8 @@ then
   EXECL="$(which $1)"
   shift 1
   EXECL="$EXECL $*"
-  EXECPH=""
 else # prepare to start new X sessions if no arguments passed
   EXECL=""
-  EXECPH="New X session"
 fi
 
 EXECL="/etc/X11/xinit/nvidia-xinitrc $EXECL"
@@ -84,7 +82,7 @@ echo 'Loading nvidia_drm module'
 execute "sudo modprobe nvidia_drm"
 
 # ---------- EXECUTING COMMAND --------
-execute $COMMAND
+execute ${COMMAND}
 
 # ---------- UNLOADING MODULES --------
 echo 'Unloading nvidia_drm module'

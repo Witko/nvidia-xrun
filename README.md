@@ -17,8 +17,10 @@ Currently sudo is required as the script needs to wake up GPU, modprobe the nvid
 * **/etc/X11/xinit/nvidia-xinitrc** - xinitrc config file. Contains the setting of provider output source
 * **/etc/X11/xinit/nvidia-xinitrc.d** - custom xinitrc scripts directory
 * **/etc/X11/nvidia-xorg.conf.d** - custom X config directory
+* **/usr/share/xsessions/nvidia-xrun-openbox.desktop** - xsession file for openbox
+* **/usr/share/xsessions/nvidia-xrun-plasma.desktop** - xsession file for plasma
 * **[OPTIONAL] ~/.nvidia-xinitrc** - user-level custom xinit script file. You can put here your favourite window manager for example
- 
+
 
 ## Setting the right bus id
 Usually the 1:0:0 bus is correct. If this is not your case(you can find out through lspci or bbswitch output mesages) you can create
@@ -29,6 +31,10 @@ a conf script for example `nano /etc/X11/nvidia-xorg.conf.d/30-nvidia.conf` to s
         Driver "nvidia"
         BusID "PCI:2:0:0"
     EndSection
+
+You can use this command to get the bus id:
+    
+	lspci | grep -i nvidia | awk '{print $1}`
     
 Also this way you can adjust some nvidia settings if you encounter issues:
 
@@ -42,7 +48,13 @@ Also this way you can adjust some nvidia settings if you encounter issues:
 ## Automatically run window manager
 For convenience you can create `nano ~/.nvidia-xinitrc` and put there your favourite window manager:
 
-    openbox-session
+    if [ $# -gt 0 ]; then
+        $*
+    else
+        openbox-session
+    #   startkde
+    fi
+
     
 With this you do not need to specify the app and you can simply run:
 
