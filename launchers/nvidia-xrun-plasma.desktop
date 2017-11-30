@@ -1,0 +1,8 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=Plasma(Nvidia Xrun)
+Comment=Plasma by KDE running with nvidia-xrun
+Type=XSession
+Exec=/usr/bin/nvidia-xrun /usr/bin/startkde
+TryExec=/usr/bin/nvidia-xrun /usr/bin/startkde
+DesktopNames=KDE

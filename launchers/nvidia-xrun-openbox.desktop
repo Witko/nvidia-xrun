@@ -1,0 +1,8 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=Openbox(Nvidia Xrun)
+Comment=Log in using the Openbox window manager (running with nvidia-xrun)
+Type=Application
+Exec=/usr/bin/nvidia-xrun /usr/bin/openbox-session
+TryExec=/usr/bin/nvidia-xrun /usr/bin/openbox-session
+Icon=openbox
