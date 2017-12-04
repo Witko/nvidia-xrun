@@ -45,14 +45,20 @@ NEWDISP=":$XNUM"
 
 if [ ! -z "$*" ] # generate exec line if arguments are given
 then 
-  # test if executable exists
-  if [ ! -x "$(which $1 2> /dev/null)" ] 
+  # test if executable exists in path
+  if [ -x "$(which $1 2> /dev/null)" ]
   then
+    # generate exec line
+    EXECL="$(which $1)"
+  # test if executable exists on disk
+  elif [ -e "$(realpath "$1")" ]
+  then
+    # generate exec line
+    EXECL="$(realpath "$1")"
+  else
     echo "$1: No such executable!"
     exit 1
   fi
-  # generate exec line
-  EXECL="$(which $1)"
   shift 1
   EXECL="$EXECL $*"
 else # prepare to start new X sessions if no arguments passed
