@@ -1,0 +1,10 @@
+
+Executing(%install): /bin/sh -e /var/tmp/rpm-tmp.0r26aj
+Processing files: nvidia-xrun-1-1.fc27.noarch
+Provides: nvidia-xrun = 1-1.fc27
+Requires(rpmlib): rpmlib(CompressedFileNames) <= 3.0.4-1 rpmlib(FileDigests) <= 4.6.0-1 rpmlib(PayloadFilesHavePrefix) <= 4.0-1
+Requires: /bin/bash
+Checking for unpackaged file(s): /usr/lib/rpm/check-files /home/vagrant/rpmbuild/BUILDROOT/nvidia-xrun-1-1.fc27.x86_64
+Wrote: /home/vagrant/packaging-dir/nvidia-xrun/nvidia-xrun-1-1.fc27.src.rpm
+Wrote: /home/vagrant/packaging-dir/nvidia-xrun/noarch/nvidia-xrun-1-1.fc27.noarch.rpm
+Executing(%clean): /bin/sh -e /var/tmp/rpm-tmp.5R0YD0
