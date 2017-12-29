@@ -63,6 +63,11 @@ With this you do not need to specify the app and you can simply run:
 ## Aur package
 The aur package can be found here: https://aur.archlinux.org/packages/nvidia-xrun/
 
+## COPR Repo for Fedora 27+
+### To Install from COPR
+* `dnf copr enable axeld/nvidia-xrun`
+* `dnf install nvidia-xrun`
+
 ## Troubleshooting
 ### Steam issues
 Yes unfortunately running Steam directly with nvidia-xrun does not work well - I recommend to use some window manager like openbox.
