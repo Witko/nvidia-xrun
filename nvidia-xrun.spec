@@ -18,11 +18,12 @@ install -pm 755 %{SOURCE0} %{buildroot}/%{_bindir}
 
 mkdir -p %{buildroot}/%{_sysconfdir}/X11/xinit/
 install -pm 644 %{SOURCE1} %{buildroot}/%{_sysconfdir}/X11/
-install -pm 644 %{SOURCE2} %{buildroot}/%{_sysconfdir}/X11/xinit/
+install -pm 755 %{SOURCE2} %{buildroot}/%{_sysconfdir}/X11/xinit/
 
 %files
 %{_bindir}/nvidia-xrun
 %{_sysconfdir}/X11/nvidia-xorg.conf
+%{_sysconfdir}/X11/xinit
 %{_sysconfdir}/X11/xinit/nvidia-xinitrc
 
 %changelog
