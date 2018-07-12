@@ -81,6 +81,9 @@ execute "sudo tee /proc/acpi/bbswitch <<<ON"
 echo 'Loading nvidia module'
 execute "sudo modprobe nvidia"
 
+echo 'Loading nvidia_uvm module'
+execute "sudo modprobe nvidia_uvm"
+
 echo 'Loading nvidia_modeset module'
 execute "sudo modprobe nvidia_modeset"
 
@@ -96,6 +99,9 @@ execute "sudo rmmod nvidia_drm"
 
 echo 'Unloading nvidia_modeset module'
 execute "sudo rmmod nvidia_modeset"
+
+echo 'Unloading nvidia_uvm module'
+execute "sudo rmmod nvidia_uvm"
 
 echo 'Unloading nvidia module'
 execute "sudo rmmod nvidia"
