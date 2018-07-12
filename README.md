@@ -94,3 +94,7 @@ Also sometimes, blacklisting is not enough and you should use some hack to reall
 For example, adding `install nvidia /bin/false` to `/etc/modprobe.d/nvidia.conf` will make every load to fail.
 In that case, you should add `--ignore-install` to `modprobe` calls in `nvidia-xrun` script.
 
+### Vulkan does not work
+Check https://wiki.archlinux.org/index.php/Vulkan
+* remove package vulkan-intel 
+* set VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json
