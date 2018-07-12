@@ -34,7 +34,7 @@ a conf script for example `nano /etc/X11/nvidia-xorg.conf.d/30-nvidia.conf` to s
 
 You can use this command to get the bus id:
     
-	lspci | grep -i nvidia | awk '{print $1}`
+	lspci | grep -i nvidia | awk '{print $1}'
     
 Also this way you can adjust some nvidia settings if you encounter issues:
 
@@ -78,7 +78,7 @@ Yes unfortunately running Steam directly with nvidia-xrun does not work well - I
 
 ### HiDPI issue
 When using openbox on a HiDPI (i.e. 4k) display, everything could be so small that is difficult to read.
-To fix, you can change the DPI settings in `~./Xresources` file by adding/changing `Xft.dpi` setting. For example :
+To fix, you can change the DPI settings in `~/.Xresources (~/.Xdefaults)` file by adding/changing `Xft.dpi` setting. For example :
 
 ```
 Xft.dpi: 192
