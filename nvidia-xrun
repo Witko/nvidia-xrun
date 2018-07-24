@@ -35,7 +35,7 @@ LVT=`fgconsole`
 # calculate first usable display
 XNUM="-1"
 SOCK="something"
-while [ ! -z "$SOCK" ] 
+while [ ! -z "$SOCK" ]
 do
   XNUM=$(( $XNUM + 1 ))
   SOCK=$(ls -A -1 /tmp/.X11-unix | grep "X$XNUM" )
@@ -44,7 +44,7 @@ done
 NEWDISP=":$XNUM"
 
 if [ ! -z "$*" ] # generate exec line if arguments are given
-then 
+then
   # test if executable exists in path
   if [ -x "$(which $1 2> /dev/null)" ]
   then
@@ -70,12 +70,8 @@ EXECL="/etc/X11/xinit/nvidia-xinitrc $EXECL"
 COMMAND="xinit $EXECL -- $NEWDISP vt$LVT -nolisten tcp -br -config nvidia-xorg.conf -configdir nvidia-xorg.conf.d"
 
 # --------- TURNING ON GPU -----------
-echo 'Waking up nvidia GPU'
-if ! [ -f /proc/acpi/bbswitch ] 
-then
-  execute "sudo modprobe bbswitch"
-fi
-execute "sudo tee /proc/acpi/bbswitch <<<ON"
+echo 'Rescanning PCI devices'
+execute "sudo tee /sys/bus/pci/rescan <<<1"
 
 # ---------- LOADING MODULES ----------
 echo 'Loading nvidia module'
@@ -88,7 +84,7 @@ echo 'Loading nvidia_modeset module'
 execute "sudo modprobe nvidia_modeset"
 
 echo 'Loading nvidia_drm module'
-execute "sudo modprobe nvidia_drm"
+execute "sudo modprobe nvidia_drm modeset=1"
 
 # ---------- EXECUTING COMMAND --------
 execute ${COMMAND}
@@ -107,13 +103,7 @@ echo 'Unloading nvidia module'
 execute "sudo rmmod nvidia"
 
 # --------- TURNING OFF GPU ----------
-if [ -f /proc/acpi/bbswitch ] 
-then
-  echo 'Turning off nvidia GPU'
-  execute "sudo tee /proc/acpi/bbswitch <<<OFF"
-
-  echo -n 'Current state of nvidia GPU: '
-  execute "cat /proc/acpi/bbswitch"
-else
-  echo "Bbswitch kernel module not loaded."
+if [ -f /sys/bus/pci/devices/0000:01:00.0/remove ]; then
+  echo 'Removing Nvidia bus from the kernel'
+  execute "sudo tee /sys/bus/pci/devices/0000:01:00.0/remove <<<1"
 fi
