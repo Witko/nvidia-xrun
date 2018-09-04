@@ -70,6 +70,12 @@ EXECL="/etc/X11/xinit/nvidia-xinitrc $EXECL"
 COMMAND="xinit $EXECL -- $NEWDISP vt$LVT -nolisten tcp -br -config nvidia-xorg.conf -configdir nvidia-xorg.conf.d"
 
 # --------- TURNING ON GPU -----------
+echo 'Turning the PCIe controller on to allow card rescan'
+execute "sudo tee /sys/bus/pci/devices/0000:00:01.0/power/control <<<on"
+
+echo 'Waiting 1 second'
+execute "sleep 1"
+
 echo 'Rescanning PCI devices'
 execute "sudo tee /sys/bus/pci/rescan <<<1"
 
@@ -107,3 +113,6 @@ if [ -f /sys/bus/pci/devices/0000:01:00.0/remove ]; then
   echo 'Removing Nvidia bus from the kernel'
   execute "sudo tee /sys/bus/pci/devices/0000:01:00.0/remove <<<1"
 fi
+
+echo 'Enabling powersave for the PCIe controller'
+execute "sudo tee /sys/bus/pci/devices/0000:00:01.0/power/control <<<auto"
