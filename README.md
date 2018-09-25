@@ -98,3 +98,33 @@ In that case, you should add `--ignore-install` to `modprobe` calls in `nvidia-x
 Check https://wiki.archlinux.org/index.php/Vulkan
 * remove package vulkan-intel 
 * set VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json
+
+### glxinfo | grep string not showing Nvidia as vendor
+
+For those running on Fedora, change :
+
+```
+Section "Files"
+  ModulePath "/usr/lib/nvidia"
+  ModulePath "/usr/lib32/nvidia"
+  ModulePath "/usr/lib32/nvidia/xorg/modules"
+  ModulePath "/usr/lib32/xorg/modules"
+  ModulePath "/usr/lib64/nvidia/xorg/modules"
+  ModulePath "/usr/lib64/nvidia/xorg"
+  ModulePath "/usr/lib64/xorg/modules"
+EndSection
+``` 
+
+for : 
+
+```
+Section "Files"
+  ModulePath "/usr/lib64/nvidia"
+  ModulePath "/usr/lib32/nvidia"
+  ModulePath "/usr/lib32/nvidia/xorg/modules"
+  ModulePath "/usr/lib32/xorg/modules"
+  ModulePath "/usr/lib64/nvidia/xorg/modules"
+  ModulePath "/usr/lib64/nvidia/xorg"
+  ModulePath "/usr/lib64/xorg/modules"
+EndSection
+```
