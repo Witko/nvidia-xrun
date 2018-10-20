@@ -1,5 +1,6 @@
 #!/bin/bash
 DRY_RUN=0
+IS_GENTOO=$(uname -r | grep gentoo) # TODO add condition in the code
 function printHelp {
   echo "Utility to run games and applications in separate X on discrete Nvidia graphic card"
   echo "Usage: "
