@@ -76,6 +76,7 @@ then
   execute "sudo modprobe bbswitch"
 fi
 execute "sudo tee /proc/acpi/bbswitch <<<ON"
+execute "sudo eselect opengl set 1"
 
 # ---------- LOADING MODULES ----------
 echo 'Loading nvidia module'
@@ -94,6 +95,7 @@ execute "sudo modprobe nvidia_drm"
 execute ${COMMAND}
 
 # ---------- UNLOADING MODULES --------
+execute "sudo eselect opengl set 1"
 echo 'Unloading nvidia_drm module'
 execute "sudo rmmod nvidia_drm"
 
