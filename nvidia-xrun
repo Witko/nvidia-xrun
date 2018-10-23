@@ -96,7 +96,7 @@ execute "sudo modprobe nvidia_drm"
 execute ${COMMAND}
 
 # ---------- UNLOADING MODULES --------
-execute "sudo eselect opengl set 1"
+execute "sudo eselect opengl set 2
 echo 'Unloading nvidia_drm module'
 execute "sudo rmmod nvidia_drm"
 
