@@ -17,6 +17,10 @@ function execute {
   fi
 }
 
+function die {
+    (>&2 echo $@)
+    exit 1
+}
 
 if [[ $EUID -eq 0 ]]; then
    echo "This script must not be run as root" >&2
@@ -69,51 +73,13 @@ EXECL="/etc/X11/xinit/nvidia-xinitrc $EXECL"
 
 COMMAND="xinit $EXECL -- $NEWDISP vt$LVT -nolisten tcp -br -config nvidia-xorg.conf -configdir nvidia-xorg.conf.d"
 
-# --------- TURNING ON GPU -----------
-echo 'Waking up nvidia GPU'
-if ! [ -f /proc/acpi/bbswitch ] 
-then
-  execute "sudo modprobe bbswitch"
-fi
-execute "sudo tee /proc/acpi/bbswitch <<<ON"
-
-# ---------- LOADING MODULES ----------
-echo 'Loading nvidia module'
-execute "sudo modprobe nvidia"
-
-echo 'Loading nvidia_uvm module'
-execute "sudo modprobe nvidia_uvm"
-
-echo 'Loading nvidia_modeset module'
-execute "sudo modprobe nvidia_modeset"
-
-echo 'Loading nvidia_drm module'
-execute "sudo modprobe nvidia_drm"
+# ---------- TURNING ON GPU -----------
+echo 'Loading nvidia'
+execute "sudo nvidia-toggle on" || die "Could not load nvidia"
 
 # ---------- EXECUTING COMMAND --------
-execute ${COMMAND}
-
-# ---------- UNLOADING MODULES --------
-echo 'Unloading nvidia_drm module'
-execute "sudo rmmod nvidia_drm"
-
-echo 'Unloading nvidia_modeset module'
-execute "sudo rmmod nvidia_modeset"
-
-echo 'Unloading nvidia_uvm module'
-execute "sudo rmmod nvidia_uvm"
-
-echo 'Unloading nvidia module'
-execute "sudo rmmod nvidia"
+execute ${COMMAND} || die "Could not execute command"
 
 # --------- TURNING OFF GPU ----------
-if [ -f /proc/acpi/bbswitch ] 
-then
-  echo 'Turning off nvidia GPU'
-  execute "sudo tee /proc/acpi/bbswitch <<<OFF"
-
-  echo -n 'Current state of nvidia GPU: '
-  execute "cat /proc/acpi/bbswitch"
-else
-  echo "Bbswitch kernel module not loaded."
-fi
+echo 'Unloading nvidia'
+execute "sudo nvidia-toggle off" || die "Could not unload nvidia"

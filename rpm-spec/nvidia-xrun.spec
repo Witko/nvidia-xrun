@@ -7,6 +7,7 @@ License: GNU GPL V2
 Source0: nvidia-xrun
 Source1: nvidia-xorg.conf
 Source2: nvidia-xinitrc
+Source3: nvidia-toggle
 buildroot: %{_tmppath}/%{name}-root
 BuildArch: noarch
 %description
@@ -22,6 +23,7 @@ install -pm 755 %{SOURCE2} %{buildroot}/%{_sysconfdir}/X11/xinit/
 
 %files
 %{_bindir}/nvidia-xrun
+%{_bindir}/nvidia-toggle
 %{_sysconfdir}/X11/nvidia-xorg.conf
 %{_sysconfdir}/X11/xinit
 %{_sysconfdir}/X11/xinit/nvidia-xinitrc
