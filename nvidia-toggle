@@ -1,0 +1,82 @@
+#!/bin/bash
+# nvidia-toggle [-d] (on | off)
+
+DRY_RUN=0
+if [[ $EUID -ne 0 ]]; then
+   (>&2 echo "This script must be run as root")
+   exit 1
+fi
+
+function execute {
+  if [ ${DRY_RUN} -eq 1 ]
+    then
+    echo ">>Dry run. Command: $*"
+  else
+    eval $*
+  fi
+}
+
+function die {
+    (>&2 echo $@)
+    exit 1
+}
+
+if [ "$1" == "-d" ]
+  then
+    DRY_RUN=1
+    shift 1
+fi
+
+case $1 in
+on)
+    # --------- TURNING ON GPU -----------
+    echo 'Waking up nvidia GPU'
+    if ! [ -f /proc/acpi/bbswitch ] 
+    then
+    execute "modprobe bbswitch" || die "Can't modprobe bbswitch"
+    fi
+    execute "tee /proc/acpi/bbswitch <<<ON" || die "Can't turn bbswitch on"
+
+    # ---------- LOADING MODULES ----------
+    echo 'Loading nvidia module'
+    execute "modprobe nvidia" || die "Can't modprobe nvidia"
+
+    echo 'Loading nvidia_uvm module'
+    execute "modprobe nvidia_uvm" || die "Can't modprove nvidia_uvm"
+
+    echo 'Loading nvidia_modeset module'
+    execute "modprobe nvidia_modeset" || die "Can't modprobe nvidia_modeset"
+
+    echo 'Loading nvidia_drm module'
+    execute "modprobe nvidia_drm" || die "Can't modprobe nvidia_drm"
+    ;;
+off)
+    # ---------- UNLOADING MODULES --------
+    echo 'Unloading nvidia_drm module'
+    execute "rmmod nvidia_drm" || die "Can't rmmod nvidia_drm"
+
+    echo 'Unloading nvidia_modeset module'
+    execute "rmmod nvidia_modeset" || die "Can't rmmod nvidia_modeset"
+
+    echo 'Unloading nvidia_uvm module'
+    execute "rmmod nvidia_uvm" || die "Can't rmmod nvidia_uvm"
+
+    echo 'Unloading nvidia module'
+    execute "rmmod nvidia" || die "Can't rmmod nvidia"
+
+    # --------- TURNING OFF GPU ----------
+    if [ -f /proc/acpi/bbswitch ] 
+    then
+    echo 'Turning off nvidia GPU'
+    execute "tee /proc/acpi/bbswitch <<<OFF" || die "Can't turn bbswitch off"
+
+    echo -n 'Current state of nvidia GPU: '
+    execute "cat /proc/acpi/bbswitch"
+    else
+    echo "Bbswitch kernel module not loaded."
+    fi
+    ;;
+*)
+    die "nvidia-toggle [-d] (on | off)"
+    ;;
+esac
