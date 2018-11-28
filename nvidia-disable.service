@@ -1,0 +1,8 @@
+[Unit]
+Description="Disable Nvidia PCI bus"
+
+[Service]
+ExecStart=/bin/bash -c 'echo 1 > /sys/bus/pci/devices/0000:01:00.0/remove'
+
+[Install]
+WantedBy=multi-user.target
