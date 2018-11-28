@@ -1,14 +1,27 @@
-# nvidia-xrun
+# nvidia-xrun-pm
 These utility scripts aim to make the life easier for nvidia cards users.
 It started with a revelation that bumblebee in current state offers very poor performance. This solution offers a bit more complicated procedure but offers a full GPU utilization(in terms of linux drivers)
 
-## Usage: 
+## Usage:
   1. switch to free tty
   1. login
   1. run `nvidia-xrun [app]`
   1. enjoy
 
-Currently sudo is required as the script needs to wake up GPU, modprobe the nvidia driver and perform cleanup afterwards. For this we use bbswitch.
+Currently sudo is required as the script needs to wake up GPU, modprobe the nvidia driver and perform cleanup afterwards.
+
+The dedicated systemd `nvidia-disable.service` unit can be used to completely
+remove the card from the kernel device tree (so that it won't even show in
+`lspci` output), and this will prevent the nvidia module to be loaded, so
+that we can take advantage of the kernel PM features to keep the card switched off.
+
+The service can be enabled with this command:
+
+```
+# systemctl enable nvidia-disable
+```
+
+When the nvidia-xrun command is used, the device is added again to the tree so that the nvidia module can be loaded properly: nvidia-xrun will remove the device and enable PM again after the application terminates.
 
 ## Structure
 * **nvidia-xrun** - uses following dir structure:
@@ -33,9 +46,9 @@ a conf script for example `nano /etc/X11/nvidia-xorg.conf.d/30-nvidia.conf` to s
     EndSection
 
 You can use this command to get the bus id:
-    
+
 	lspci | grep -i nvidia | awk '{print $1}'
-    
+
 Also this way you can adjust some nvidia settings if you encounter issues:
 
     Section "Screen"
@@ -44,7 +57,7 @@ Also this way you can adjust some nvidia settings if you encounter issues:
         #  Option "AllowEmptyInitialConfiguration" "Yes"
         #  Option "UseDisplayDevice" "none"
     EndSection
-    
+
 ## Automatically run window manager
 For convenience you can create `nano ~/.nvidia-xinitrc` and put there your favourite window manager:
 
@@ -55,11 +68,11 @@ For convenience you can create `nano ~/.nvidia-xinitrc` and put there your favou
     #   startkde
     fi
 
-    
+
 With this you do not need to specify the app and you can simply run:
 
     nvidia-xrun
-    
+
 ## Aur package
 The aur package can be found here: https://aur.archlinux.org/packages/nvidia-xrun/
 
@@ -96,5 +109,5 @@ In that case, you should add `--ignore-install` to `modprobe` calls in `nvidia-x
 
 ### Vulkan does not work
 Check https://wiki.archlinux.org/index.php/Vulkan
-* remove package vulkan-intel 
+* remove package vulkan-intel
 * set VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json
