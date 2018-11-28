@@ -1,9 +1,9 @@
 [Unit]
-Description="Disable Nvidia PCI bus"
+Description="Remove Nvidia GPU from kernel devices list and enable PM"
 
 [Service]
 Type=oneshot
-ExecStart=/bin/bash -c 'echo 1 > /sys/bus/pci/devices/0000:01:00.0/remove'
+ExecStartPre=/bin/bash -c 'echo 1 > /sys/bus/pci/devices/0000:01:00.0/remove'
 ExecStart=/bin/bash -c 'echo auto > /sys/bus/pci/devices/0000:00:01.0/power/control'
 
 [Install]
