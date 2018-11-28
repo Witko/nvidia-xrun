@@ -2,7 +2,9 @@
 Description="Disable Nvidia PCI bus"
 
 [Service]
+Type=oneshot
 ExecStart=/bin/bash -c 'echo 1 > /sys/bus/pci/devices/0000:01:00.0/remove'
+ExecStart=/bin/bash -c 'echo auto > /sys/bus/pci/devices/0000:00:01.0/power/control'
 
 [Install]
 WantedBy=multi-user.target
