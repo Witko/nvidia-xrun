@@ -65,7 +65,7 @@ else # prepare to start new X sessions if no arguments passed
   EXECL=""
 fi
 
-EXECL="/etc/X11/xinit/nvidia-xinitrc $EXECL"
+EXECL="/etc/X11/xinit/nvidia-xinitrc \"$EXECL\""
 
 COMMAND="xinit $EXECL -- $NEWDISP vt$LVT -nolisten tcp -br -config nvidia-xorg.conf -configdir nvidia-xorg.conf.d"
 
@@ -88,7 +88,7 @@ echo 'Loading nvidia_modeset module'
 execute "sudo modprobe nvidia_modeset"
 
 echo 'Loading nvidia_drm module'
-execute "sudo modprobe nvidia_drm"
+execute "sudo modprobe nvidia_drm modeset=1"
 
 # ---------- EXECUTING COMMAND --------
 execute ${COMMAND}

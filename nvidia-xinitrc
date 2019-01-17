@@ -39,6 +39,6 @@ if [ -f "$userxinitrc" ]; then
     sh ${userxinitrc} $*
 else
     if [ $# -gt 0 ]; then
-        "$*"
+        sh -c "exec $*"
 	fi
 fi
