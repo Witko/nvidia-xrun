@@ -17,6 +17,7 @@ Currently sudo is required as the script needs to wake up GPU, modprobe the nvid
 * **/etc/X11/xinit/nvidia-xinitrc** - xinitrc config file. Contains the setting of provider output source
 * **/etc/X11/xinit/nvidia-xinitrc.d** - custom xinitrc scripts directory
 * **/etc/X11/nvidia-xorg.conf.d** - custom X config directory
+* **/etc/default/nvidia-xorg** - nvidia-xrun config file
 * **/usr/share/xsessions/nvidia-xrun-openbox.desktop** - xsession file for openbox
 * **/usr/share/xsessions/nvidia-xrun-plasma.desktop** - xsession file for plasma
 * **[OPTIONAL] ~/.nvidia-xinitrc** - user-level custom xinit script file. You can put here your favourite window manager for example
@@ -44,6 +45,7 @@ Also this way you can adjust some nvidia settings if you encounter issues:
         #  Option "AllowEmptyInitialConfiguration" "Yes"
         #  Option "UseDisplayDevice" "none"
     EndSection
+You also need to set the bus id in the `/etc/default/nvidia-xorg` file - e.g. `BUS_ID=0000:00:01.0`
     
 ## Automatically run window manager
 For convenience you can create `nano ~/.nvidia-xinitrc` and put there your favourite window manager:

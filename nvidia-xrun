@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
 DRY_RUN=0
 function printHelp {
   echo "Utility to run games and applications in separate X on discrete Nvidia graphic card"
@@ -9,7 +10,7 @@ function printHelp {
 }
 
 function execute {
-  if [ ${DRY_RUN} -eq 1 ]
+  if [[ ${DRY_RUN} -eq 1 ]]
     then
     echo ">>Dry run. Command: $*"
   else
@@ -23,11 +24,14 @@ if [[ $EUID -eq 0 ]]; then
    exit 1
 fi
 
-if [ "$1" == "-d" ]
+if [[ "$1" == "-d" ]]
   then
     DRY_RUN=1
     shift 1
 fi
+
+# load config file
+. /etc/default/nvidia-xrun
 
 # calculate current VT
 LVT=`fgconsole`
@@ -35,7 +39,7 @@ LVT=`fgconsole`
 # calculate first usable display
 XNUM="-1"
 SOCK="something"
-while [ ! -z "$SOCK" ] 
+while [[ ! -z "$SOCK" ]]
 do
   XNUM=$(( $XNUM + 1 ))
   SOCK=$(ls -A -1 /tmp/.X11-unix | grep "X$XNUM" )
@@ -43,15 +47,15 @@ done
 
 NEWDISP=":$XNUM"
 
-if [ ! -z "$*" ] # generate exec line if arguments are given
-then 
+if [[ ! -z "$*" ]] # generate exec line if arguments are given
+then
   # test if executable exists in path
-  if [ -x "$(which $1 2> /dev/null)" ]
+  if [[ -x "$(which $1 2> /dev/null)" ]]
   then
     # generate exec line
     EXECL="$(which $1)"
   # test if executable exists on disk
-  elif [ -e "$(realpath "$1")" ]
+  elif [[ -e "$(realpath "$1")" ]]
   then
     # generate exec line
     EXECL="$(realpath "$1")"
@@ -70,50 +74,38 @@ EXECL="/etc/X11/xinit/nvidia-xinitrc \"$EXECL\""
 COMMAND="xinit $EXECL -- $NEWDISP vt$LVT -nolisten tcp -br -config nvidia-xorg.conf -configdir nvidia-xorg.conf.d"
 
 # --------- TURNING ON GPU -----------
-echo 'Waking up nvidia GPU'
-if ! [ -f /proc/acpi/bbswitch ] 
-then
-  execute "sudo modprobe bbswitch"
+if [[ ! -d /sys/bus/pci/devices/${BUS_ID} ]]; then
+	echo 'Rescanning PCI devices'
+	execute "sudo tee /sys/bus/pci/rescan <<<1"
+	echo "Waiting ${BUS_RESCAN_WAIT_SEC} second for rescan"
+	execute "sleep ${BUS_RESCAN_WAIT_SEC}"
 fi
-execute "sudo tee /proc/acpi/bbswitch <<<ON"
+
+echo 'Turning the card on'
+execute "sudo tee /sys/bus/pci/devices/${BUS_ID}/power/control <<<on"
 
 # ---------- LOADING MODULES ----------
-echo 'Loading nvidia module'
-execute "sudo modprobe nvidia"
-
-echo 'Loading nvidia_uvm module'
-execute "sudo modprobe nvidia_uvm"
-
-echo 'Loading nvidia_modeset module'
-execute "sudo modprobe nvidia_modeset"
-
-echo 'Loading nvidia_drm module'
-execute "sudo modprobe nvidia_drm modeset=1"
+for module in "${MODULES_LOAD[@]}"
+do
+   	echo "Loading module ${module}"
+	execute "sudo modprobe ${module}"
+done
 
 # ---------- EXECUTING COMMAND --------
 execute ${COMMAND}
 
 # ---------- UNLOADING MODULES --------
-echo 'Unloading nvidia_drm module'
-execute "sudo rmmod nvidia_drm"
-
-echo 'Unloading nvidia_modeset module'
-execute "sudo rmmod nvidia_modeset"
-
-echo 'Unloading nvidia_uvm module'
-execute "sudo rmmod nvidia_uvm"
-
-echo 'Unloading nvidia module'
-execute "sudo rmmod nvidia"
+for module in "${MODULES_UNLOAD[@]}"
+do
+   	echo "Unloading module ${module}"
+	execute "sudo modprobe ${module}"
+done
 
 # --------- TURNING OFF GPU ----------
-if [ -f /proc/acpi/bbswitch ] 
-then
-  echo 'Turning off nvidia GPU'
-  execute "sudo tee /proc/acpi/bbswitch <<<OFF"
-
-  echo -n 'Current state of nvidia GPU: '
-  execute "cat /proc/acpi/bbswitch"
+if [[ -f /sys/bus/pci/devices/${BUS_ID}/remove ]]; then
+  	echo 'Removing Nvidia bus from the kernel'
+ 	execute "sudo tee /sys/bus/pci/devices/${BUS_ID}/remove <<<1"
 else
-  echo "Bbswitch kernel module not loaded."
+	echo 'Enabling powersave for the PCIe controller'
+	execute "sudo tee /sys/bus/pci/devices/${BUS_ID}/power/control <<<auto"
 fi

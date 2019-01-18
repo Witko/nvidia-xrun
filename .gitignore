@@ -1,3 +1,5 @@
 # Created by .ignore support plugin (hsz.mobi)
 nvidia-xrun.iml
 .idea
+test-install.sh
+test-cleanup.sh
