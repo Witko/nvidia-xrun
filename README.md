@@ -62,6 +62,20 @@ With this you do not need to specify the app and you can simply run:
 
     nvidia-xrun
     
+## Bind nvidia-xrun to tty session
+For convenience you can setup a certian tty so that when you log in into it,
+it will auto-load nvidia-xrun. to do so, edit `/etc/profile` and amend to the end:
+
+```bash
+# Run nvidia-xrun when logged in on tty6.
+if [ "$(tty)" = "/dev/tty6" ]; then
+        nvidia-xrun
+	logout
+fi
+```
+
+This example will bind tty6, you can change it by changing the `/dev/tty6` string.
+    
 ## Aur package
 The aur package can be found here: https://aur.archlinux.org/packages/nvidia-xrun/
 
