@@ -17,7 +17,7 @@ Currently sudo is required as the script needs to wake up GPU, modprobe the nvid
 * **/etc/X11/xinit/nvidia-xinitrc** - xinitrc config file. Contains the setting of provider output source
 * **/etc/X11/xinit/nvidia-xinitrc.d** - custom xinitrc scripts directory
 * **/etc/X11/nvidia-xorg.conf.d** - custom X config directory
-* **/etc/default/nvidia-xorg** - nvidia-xrun config file
+* **/etc/default/nvidia-xrun** - nvidia-xrun config file
 * **/usr/share/xsessions/nvidia-xrun-openbox.desktop** - xsession file for openbox
 * **/usr/share/xsessions/nvidia-xrun-plasma.desktop** - xsession file for plasma
 * **[OPTIONAL] ~/.nvidia-xinitrc** - user-level custom xinit script file. You can put here your favourite window manager for example
