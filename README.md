@@ -45,7 +45,7 @@ Also this way you can adjust some nvidia settings if you encounter issues:
         #  Option "AllowEmptyInitialConfiguration" "Yes"
         #  Option "UseDisplayDevice" "none"
     EndSection
-You also need to set the bus id in the `/etc/default/nvidia-xorg` file - e.g. `BUS_ID=0000:00:01.0`
+You also need to set the bus id in the `/etc/default/nvidia-xrun` file - e.g. `BUS_ID=0000:00:01.0`
     
 ## Automatically run window manager
 For convenience you can create `nano ~/.nvidia-xinitrc` and put there your favourite window manager:
