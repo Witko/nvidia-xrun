@@ -98,7 +98,7 @@ execute ${COMMAND}
 for module in "${MODULES_UNLOAD[@]}"
 do
    	echo "Unloading module ${module}"
-	execute "sudo modprobe ${module}"
+	execute "sudo rmmod ${module}"
 done
 
 # --------- TURNING OFF GPU ----------
