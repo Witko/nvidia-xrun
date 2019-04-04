@@ -18,11 +18,13 @@ function execute {
   fi
 }
 
+function turn_off_gpu {
+  echo 'Removing Nvidia bus from the kernel'
+  execute "sudo tee /sys/bus/pci/devices/${DEVICE_BUS_ID}/remove <<<1"
 
-if [[ $EUID -eq 0 ]]; then
-   echo "This script must not be run as root" >&2
-   exit 1
-fi
+  echo 'Enabling powersave for the PCIe controller'
+  execute "sudo tee /sys/bus/pci/devices/${CONTROLLER_BUS_ID}/power/control <<<auto"
+}
 
 if [[ "$1" == "-d" ]]
   then
@@ -32,6 +34,16 @@ fi
 
 # load config file
 . /etc/default/nvidia-xrun
+
+# this is used by the systemd service to turn off the gpu at boot
+if [[ "$TURN_OFF_GPU_ONLY" == '1' ]]; then
+  turn_off_gpu && exit 0
+fi
+
+if [[ $EUID -eq 0 ]]; then
+   echo "This script must not be run as root unless TURN_OFF_GPU_ONLY=1 is set" >&2
+   exit 1
+fi
 
 # calculate current VT
 LVT=`fgconsole`
@@ -108,8 +120,4 @@ do
 done
 
 # --------- TURNING OFF GPU ----------
-echo 'Removing Nvidia bus from the kernel'
-execute "sudo tee /sys/bus/pci/devices/${DEVICE_BUS_ID}/remove <<<1"
-
-echo 'Enabling powersave for the PCIe controller'
-execute "sudo tee /sys/bus/pci/devices/${CONTROLLER_BUS_ID}/power/control <<<auto"
+turn_off_gpu
