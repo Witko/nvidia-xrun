@@ -108,10 +108,8 @@ do
 done
 
 # --------- TURNING OFF GPU ----------
-if [[ -f /sys/bus/pci/devices/${DEVICE_BUS_ID}/remove ]]; then
-  	echo 'Removing Nvidia bus from the kernel'
- 	execute "sudo tee /sys/bus/pci/devices/${DEVICE_BUS_ID}/remove <<<1"
-else
-	echo 'Enabling powersave for the PCIe controller'
-	execute "sudo tee /sys/bus/pci/devices/${CONTROLLER_BUS_ID}/power/control <<<auto"
-fi
+echo 'Removing Nvidia bus from the kernel'
+execute "sudo tee /sys/bus/pci/devices/${DEVICE_BUS_ID}/remove <<<1"
+
+echo 'Enabling powersave for the PCIe controller'
+execute "sudo tee /sys/bus/pci/devices/${CONTROLLER_BUS_ID}/power/control <<<auto"
