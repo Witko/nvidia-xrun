@@ -1,0 +1,6 @@
+CONTROLLER_BUS_ID=0000:00:01.0
+DEVICE_BUS_ID=0000:01:00.0
+MODULE_NVIDIA_DRM_PARAMS="modeset=1"
+BUS_RESCAN_WAIT_SEC=1
+MODULES_LOAD=(nvidia nvidia_uvm nvidia_modeset "nvidia_drm modeset=1")
+MODULES_UNLOAD=(nvidia_drm nvidia_modeset nvidia_uvm nvidia)
