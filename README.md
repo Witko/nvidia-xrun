@@ -60,8 +60,12 @@ Also this way you can adjust some nvidia settings if you encounter issues:
         #  Option "UseDisplayDevice" "none"
     EndSection
 
-You also need to set the bus id in the `/etc/default/nvidia-xrun` file - e.g. `DEVICE_BUS_ID=0000:00:01.0`
-    
+In order to make power management features work properly, you need to make sure
+that bus ids in `/etc/default/nvidia-xrun` are correctly set for both the
+NVIDIA graphic card and the PCI express controller that hosts it. You should be
+able to find both the ids in the output of `lshw`: the PCIe controller is
+usually displayed right before the graphic card.
+
 ## Automatically run window manager
 For convenience you can create `nano ~/.nvidia-xinitrc` and put there your favourite window manager:
 
