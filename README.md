@@ -31,6 +31,7 @@ When the nvidia-xrun command is used, the device is added again to the tree so t
 * **/etc/X11/xinit/nvidia-xinitrc.d** - custom xinitrc scripts directory
 * **/etc/X11/nvidia-xorg.conf.d** - custom X config directory
 * **/etc/systemd/system/nvidia-xrun-pm.service** systemd service
+* **/etc/default/nvidia-xrun** - nvidia-xrun config file
 * **/usr/share/xsessions/nvidia-xrun-openbox.desktop** - xsession file for openbox
 * **/usr/share/xsessions/nvidia-xrun-plasma.desktop** - xsession file for plasma
 * **[OPTIONAL] ~/.nvidia-xinitrc** - user-level custom xinit script file. You can put here your favourite window manager for example
@@ -58,6 +59,12 @@ Also this way you can adjust some nvidia settings if you encounter issues:
         #  Option "AllowEmptyInitialConfiguration" "Yes"
         #  Option "UseDisplayDevice" "none"
     EndSection
+
+In order to make power management features work properly, you need to make sure
+that bus ids in `/etc/default/nvidia-xrun` are correctly set for both the
+NVIDIA graphic card and the PCI express controller that hosts it. You should be
+able to find both the ids in the output of `lshw`: the PCIe controller is
+usually displayed right before the graphic card.
 
 ## Automatically run window manager
 For convenience you can create `nano ~/.nvidia-xinitrc` and put there your favourite window manager:

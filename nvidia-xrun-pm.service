@@ -3,8 +3,8 @@ Description="Remove Nvidia GPU from kernel devices list and enable PM"
 
 [Service]
 Type=oneshot
-ExecStartPre=/bin/bash -c 'echo 1 > /sys/bus/pci/devices/0000:01:00.0/remove'
-ExecStart=/bin/bash -c 'echo auto > /sys/bus/pci/devices/0000:00:01.0/power/control'
+Environment="TURN_OFF_GPU_ONLY=1"
+ExecStart=/usr/bin/nvidia-xrun
 
 [Install]
 WantedBy=multi-user.target

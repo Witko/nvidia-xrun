@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
 userresources=$HOME/.Xresources
 usermodmap=$HOME/.Xmodmap
 sysresources=/etc/X11/xinit/.Xresources
@@ -6,28 +7,28 @@ sysmodmap=/etc/X11/xinit/.Xmodmap
 userxinitrc=$HOME/.nvidia-xinitrc
 
 # merge in defaults and keymaps
-if [ -f ${sysresources} ]; then
+if [[ -f ${sysresources} ]]; then
     xrdb -merge ${sysresources}
 fi
 
-if [ -f ${sysmodmap} ]; then
+if [[ -f ${sysmodmap} ]]; then
     xmodmap ${sysmodmap}
 fi
 
-if [ -f "$userresources" ]; then
+if [[ -f "$userresources" ]]; then
     xrdb -merge "$userresources"
 fi
 
-if [ -f "$usermodmap" ]; then
+if [[ -f "$usermodmap" ]]; then
     xmodmap "$usermodmap"
 fi
 
 export LD_LIBRARY_PATH=/usr/lib64/nvidia/:/usr/lib32/nvidia:/usr/lib:${LD_LIBRARY_PATH}
 
 # load additional configs
-if [ -d /etc/X11/xinit/nvidia-xinitrc.d ] ; then
+if [[ -d /etc/X11/xinit/nvidia-xinitrc.d ]] ; then
  for f in /etc/X11/xinit/nvidia-xinitrc.d/?*.sh ; do
-  [ -x "$f" ] && . "$f"
+  [[ -x "$f" ]] && . "$f"
  done
  unset f
 fi
@@ -35,10 +36,10 @@ fi
 xrandr --setprovideroutputsource modesetting NVIDIA-0
 xrandr --auto
 
-if [ -f "$userxinitrc" ]; then
+if [[ -f "$userxinitrc" ]]; then
     sh ${userxinitrc} $*
 else
-    if [ $# -gt 0 ]; then
-        "$*"
+    if [[ $# -gt 0 ]]; then
+        sh -c "exec $*"
 	fi
 fi
