@@ -1,0 +1,10 @@
+[Unit]
+Description="Remove Nvidia GPU from kernel devices list and enable PM"
+
+[Service]
+Type=oneshot
+Environment="TURN_OFF_GPU_ONLY=1"
+ExecStart=/usr/bin/nvidia-xrun
+
+[Install]
+WantedBy=multi-user.target

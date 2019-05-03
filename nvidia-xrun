@@ -18,11 +18,13 @@ function execute {
   fi
 }
 
+function turn_off_gpu {
+  echo 'Removing Nvidia bus from the kernel'
+  execute "sudo tee /sys/bus/pci/devices/${DEVICE_BUS_ID}/remove <<<1"
 
-if [[ $EUID -eq 0 ]]; then
-   echo "This script must not be run as root" >&2
-   exit 1
-fi
+  echo 'Enabling powersave for the PCIe controller'
+  execute "sudo tee /sys/bus/pci/devices/${CONTROLLER_BUS_ID}/power/control <<<auto"
+}
 
 if [[ "$1" == "-d" ]]
   then
@@ -32,6 +34,16 @@ fi
 
 # load config file
 . /etc/default/nvidia-xrun
+
+# this is used by the systemd service to turn off the gpu at boot
+if [[ "$TURN_OFF_GPU_ONLY" == '1' ]]; then
+  turn_off_gpu && exit 0
+fi
+
+if [[ $EUID -eq 0 ]]; then
+   echo "This script must not be run as root unless TURN_OFF_GPU_ONLY=1 is set" >&2
+   exit 1
+fi
 
 # calculate current VT
 LVT=`fgconsole`
@@ -74,7 +86,13 @@ EXECL="/etc/X11/xinit/nvidia-xinitrc \"$EXECL\""
 COMMAND="xinit $EXECL -- $NEWDISP vt$LVT -nolisten tcp -br -config nvidia-xorg.conf -configdir nvidia-xorg.conf.d"
 
 # --------- TURNING ON GPU -----------
-if [[ ! -d /sys/bus/pci/devices/${BUS_ID} ]]; then
+echo 'Turning the PCIe controller on to allow card rescan'
+execute "sudo tee /sys/bus/pci/devices/${CONTROLLER_BUS_ID}/power/control <<<on"
+
+echo 'Waiting 1 second'
+execute "sleep 1"
+
+if [[ ! -d /sys/bus/pci/devices/${DEVICE_BUS_ID} ]]; then
 	echo 'Rescanning PCI devices'
 	execute "sudo tee /sys/bus/pci/rescan <<<1"
 	echo "Waiting ${BUS_RESCAN_WAIT_SEC} second for rescan"
@@ -82,7 +100,7 @@ if [[ ! -d /sys/bus/pci/devices/${BUS_ID} ]]; then
 fi
 
 echo 'Turning the card on'
-execute "sudo tee /sys/bus/pci/devices/${BUS_ID}/power/control <<<on"
+execute "sudo tee /sys/bus/pci/devices/${DEVICE_BUS_ID}/power/control <<<on"
 
 # ---------- LOADING MODULES ----------
 for module in "${MODULES_LOAD[@]}"
@@ -102,10 +120,4 @@ do
 done
 
 # --------- TURNING OFF GPU ----------
-if [[ -f /sys/bus/pci/devices/${BUS_ID}/remove ]]; then
-  	echo 'Removing Nvidia bus from the kernel'
- 	execute "sudo tee /sys/bus/pci/devices/${BUS_ID}/remove <<<1"
-else
-	echo 'Enabling powersave for the PCIe controller'
-	execute "sudo tee /sys/bus/pci/devices/${BUS_ID}/power/control <<<auto"
-fi
+turn_off_gpu
