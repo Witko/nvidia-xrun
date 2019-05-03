@@ -1,4 +1,4 @@
-# nvidia-xrun-pm
+# nvidia-xrun
 These utility scripts aim to make the life easier for nvidia cards users.
 It started with a revelation that bumblebee in current state offers very poor performance. This solution offers a bit more complicated procedure but offers a full GPU utilization(in terms of linux drivers)
 
@@ -81,16 +81,16 @@ With this you do not need to specify the app and you can simply run:
 
     nvidia-xrun
 
-## AUR package
-The AUR package can be found here: https://aur.archlinux.org/packages/nvidia-xrun-pm/
+## Aur package
+The aur package can be found here: https://aur.archlinux.org/packages/nvidia-xrun/
 
-## COPR Repository for Fedora, RHEL, and openSUSE
-The repository details and RPM packages for all supported distributions can be found on the [ekultails/nvidia-xrun-pm](https://copr.fedorainfracloud.org/coprs/ekultails/nvidia-xrun-pm/) overview page.
+## COPR Repo for Fedora 27+
+### To Install from COPR
+* `dnf copr enable axeld/nvidia-xrun`
+* `dnf install nvidia-xrun`
 
-### Install (Fedora and RHEL)
-* `dnf copr enable ekultails/nvidia-xrun-pm`
-* `dnf install nvidia-xrun-pm`
-
+## OBS Repo for OpenSUSE, Fedora 27+ and RHEL7
+The OBS Repo can be found [here](https://software.opensuse.org//download.html?project=home%3AAxelSilverdew&package=nvidia-xrun)
 
 
 ## Troubleshooting
