@@ -1,3 +1,10 @@
+# When enabled, nvidia-xrun will turn the card on before attempting to load the
+# modules and running the command, and turn it off after the commands exits and
+# the modules gets unloaded. If order for this to work, CONTROLLER_BUS_ID and
+# DEVICE_BUS_ID must be set correctly. IDs can be found by by inspecting the
+# output of lshw.
+ENABLE_PM=1
+
 # Bus ID of the PCI express controller
 CONTROLLER_BUS_ID=0000:00:01.0
 
