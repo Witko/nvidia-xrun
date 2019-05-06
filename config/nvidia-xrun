@@ -1,5 +1,29 @@
+# When enabled, nvidia-xrun will turn the card on before attempting to load the
+# modules and running the command, and turn it off after the commands exits and
+# the modules gets unloaded. If order for this to work, CONTROLLER_BUS_ID and
+# DEVICE_BUS_ID must be set correctly. IDs can be found by by inspecting the
+# output of lshw.
+ENABLE_PM=1
+
+# When PM is enabled, remove the card from the system after the command exists
+# and modules unload: the card will be readded in the next nvidia-xrun
+# execution before loading the nvidia module again. This is recommended as Xorg
+# and some other programs tend to load the nvidia module if they detect a
+# nvidia card in the system, and when the module is loaded the card can't save
+# power.
+REMOVE_DEVICE=1
+
+# Bus ID of the PCI express controller
 CONTROLLER_BUS_ID=0000:00:01.0
+
+# Bus ID of the graphic card
 DEVICE_BUS_ID=0000:01:00.0
+
+# Seconds to wait before turning on the card after PCI devices rescan
 BUS_RESCAN_WAIT_SEC=1
+
+# Ordered list of modules to load before running the command
 MODULES_LOAD=(nvidia nvidia_uvm nvidia_modeset "nvidia_drm modeset=1")
+
+# Ordered list of modules to unload after the command exits
 MODULES_UNLOAD=(nvidia_drm nvidia_modeset nvidia_uvm nvidia)

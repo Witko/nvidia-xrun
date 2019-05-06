@@ -19,11 +19,50 @@ function execute {
 }
 
 function turn_off_gpu {
-  echo 'Removing Nvidia bus from the kernel'
-  execute "sudo tee /sys/bus/pci/devices/${DEVICE_BUS_ID}/remove <<<1"
+  if [[ "$REMOVE_DEVICE" == '1' ]]; then
+    echo 'Removing Nvidia bus from the kernel'
+    execute "sudo tee /sys/bus/pci/devices/${DEVICE_BUS_ID}/remove <<<1"
+  else
+    echo 'Enabling powersave for the graphic card'
+    execute "sudo tee /sys/bus/pci/devices/${DEVICE_BUS_ID}/power/control <<<auto"
+  fi
 
   echo 'Enabling powersave for the PCIe controller'
   execute "sudo tee /sys/bus/pci/devices/${CONTROLLER_BUS_ID}/power/control <<<auto"
+}
+
+function turn_on_gpu {
+  echo 'Turning the PCIe controller on to allow card rescan'
+  execute "sudo tee /sys/bus/pci/devices/${CONTROLLER_BUS_ID}/power/control <<<on"
+
+  echo 'Waiting 1 second'
+  execute "sleep 1"
+
+  if [[ ! -d /sys/bus/pci/devices/${DEVICE_BUS_ID} ]]; then
+    echo 'Rescanning PCI devices'
+    execute "sudo tee /sys/bus/pci/rescan <<<1"
+    echo "Waiting ${BUS_RESCAN_WAIT_SEC} second for rescan"
+    execute "sleep ${BUS_RESCAN_WAIT_SEC}"
+  fi
+
+  echo 'Turning the card on'
+  execute "sudo tee /sys/bus/pci/devices/${DEVICE_BUS_ID}/power/control <<<on"
+}
+
+function load_modules {
+  for module in "${MODULES_LOAD[@]}"
+  do
+    echo "Loading module ${module}"
+    execute "sudo modprobe ${module}"
+  done
+}
+
+function unload_modules {
+  for module in "${MODULES_UNLOAD[@]}"
+  do
+    echo "Unloading module ${module}"
+    execute "sudo modprobe -r ${module}"
+  done
 }
 
 if [[ "$1" == "-d" ]]
@@ -86,38 +125,20 @@ EXECL="/etc/X11/xinit/nvidia-xinitrc \"$EXECL\""
 COMMAND="xinit $EXECL -- $NEWDISP vt$LVT -nolisten tcp -br -config nvidia-xorg.conf -configdir nvidia-xorg.conf.d"
 
 # --------- TURNING ON GPU -----------
-echo 'Turning the PCIe controller on to allow card rescan'
-execute "sudo tee /sys/bus/pci/devices/${CONTROLLER_BUS_ID}/power/control <<<on"
-
-echo 'Waiting 1 second'
-execute "sleep 1"
-
-if [[ ! -d /sys/bus/pci/devices/${DEVICE_BUS_ID} ]]; then
-	echo 'Rescanning PCI devices'
-	execute "sudo tee /sys/bus/pci/rescan <<<1"
-	echo "Waiting ${BUS_RESCAN_WAIT_SEC} second for rescan"
-	execute "sleep ${BUS_RESCAN_WAIT_SEC}"
+if [[ "$ENABLE_PM" == '1' ]]; then
+  turn_on_gpu
 fi
 
-echo 'Turning the card on'
-execute "sudo tee /sys/bus/pci/devices/${DEVICE_BUS_ID}/power/control <<<on"
-
 # ---------- LOADING MODULES ----------
-for module in "${MODULES_LOAD[@]}"
-do
-   	echo "Loading module ${module}"
-	execute "sudo modprobe ${module}"
-done
+load_modules
 
 # ---------- EXECUTING COMMAND --------
 execute ${COMMAND}
 
 # ---------- UNLOADING MODULES --------
-for module in "${MODULES_UNLOAD[@]}"
-do
-   	echo "Unloading module ${module}"
-	execute "sudo modprobe -r ${module}"
-done
+unload_modules
 
 # --------- TURNING OFF GPU ----------
-turn_off_gpu
+if [[ "$ENABLE_PM" == '1' ]]; then
+  turn_off_gpu
+fi
