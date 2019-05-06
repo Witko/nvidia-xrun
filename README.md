@@ -81,17 +81,18 @@ With this you do not need to specify the app and you can simply run:
 
     nvidia-xrun
 
-## Aur package
-The aur package can be found here: https://aur.archlinux.org/packages/nvidia-xrun/
+## AUR Package
+The Arch Linux User Repository package can be found [here](https://aur.archlinux.org/packages/nvidia-xrun/).
 
-## COPR Repo for Fedora 27+
-### To Install from COPR
-* `dnf copr enable axeld/nvidia-xrun`
-* `dnf install nvidia-xrun`
+## COPR Repository for Enterprise Linux, Fedora, Mageia, and openSUSE
+The RPM packages and repository details for all supported distributions can be found on the [ekultails/nvidia-xrun](https://copr.fedorainfracloud.org/coprs/ekultails/nvidia-xrun/) COPR overview page.
 
-## OBS Repo for OpenSUSE, Fedora 27+ and RHEL7
-The OBS Repo can be found [here](https://software.opensuse.org//download.html?project=home%3AAxelSilverdew&package=nvidia-xrun)
+### Install (Enterprise Linux and Fedora)
 
+```
+sudo dnf copr enable ekultails/nvidia-xrun
+sudo dnf install nvidia-xrun
+```
 
 ## Troubleshooting
 ### Steam issues
