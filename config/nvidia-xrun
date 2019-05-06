@@ -5,6 +5,14 @@
 # output of lshw.
 ENABLE_PM=1
 
+# When PM is enabled, remove the card from the system after the command exists
+# and modules unload: the card will be readded in the next nvidia-xrun
+# execution before loading the nvidia module again. This is recommended as Xorg
+# and some other programs tend to load the nvidia module if they detect a
+# nvidia card in the system, and when the module is loaded the card can't save
+# power.
+REMOVE_DEVICE=1
+
 # Bus ID of the PCI express controller
 CONTROLLER_BUS_ID=0000:00:01.0
 
