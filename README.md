@@ -23,7 +23,7 @@ The service can be enabled with this command:
 When the nvidia-xrun command is used, the device is added again to the tree so that the nvidia module can be loaded properly: nvidia-xrun will remove the device and enable PM again after the application terminates.
 
 ### Passwordless `sudo`
-This fork allows you to run nvidia-xrun without entering your password by whitelisting `nvidia-toggle` in your sudoer's file:
+Whitelisting `nvidia-toggle` in your sudoer's file allows you to use `nvidia-xrun` without entering your password:
 
 ```
 %users ALL=(root) NOPASSWD:/usr/bin/nvidia-toggle
