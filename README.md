@@ -9,7 +9,7 @@ It started with a revelation that bumblebee in current state offers very poor pe
   1. enjoy
 
 ### Passwordless `sudo`
-This fork allows you to run nvidia-xrun without entering your password by whitelisting `nvidia-toggle` in your sudoer's file:
+Whitelisting `nvidia-toggle` in your sudoer's file allows you to use `nvidia-xrun` without entering your password:
 
 ```
 %users ALL=(root) NOPASSWD:/usr/bin/nvidia-toggle
