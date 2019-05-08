@@ -8,7 +8,16 @@ It started with a revelation that bumblebee in current state offers very poor pe
   1. run `nvidia-xrun [app]`
   1. enjoy
 
-Currently sudo is required as the script needs to wake up GPU, modprobe the nvidia driver and perform cleanup afterwards. For this we use bbswitch.
+### Passwordless `sudo`
+This fork allows you to run nvidia-xrun without entering your password by whitelisting `nvidia-toggle` in your sudoer's file:
+
+```
+%users ALL=(root) NOPASSWD:/usr/bin/nvidia-toggle
+```
+
+...where `/usr/bin/nvidia-toggle` is the full path to the `nvidia-toggle` script.
+
+Note: it is a good practice to ensure binaries/scripts/etc. that are whitelisted for passwordless `sudo` are owned by root.
 
 ## Structure
 * **nvidia-xrun** - uses following dir structure:
