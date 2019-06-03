@@ -51,6 +51,13 @@ You can use this command to get the bus id:
 
 	lspci | grep -i nvidia | awk '{print $1}'
 
+Note that this prints your bus id in hexadecimal, but the Xorg configuration
+script requires that you provide it in decimal, so you'll need to covert it.
+You can do this with bash:
+
+    # In this example, my bus id is "3c"
+    bash -c "echo $(( 16#3c ))"
+
 Also this way you can adjust some nvidia settings if you encounter issues:
 
     Section "Screen"
