@@ -10,11 +10,10 @@ function printHelp {
 }
 
 function execute {
-  if [[ ${DRY_RUN} -eq 1 ]]
-    then
-    echo ">>Dry run. Command: $*"
+  if [[ ${DRY_RUN} -ne 0 ]]; then
+    echo ">>Dry run. Command: $@"
   else
-    eval $*
+    eval "$@"
   fi
 }
 
@@ -38,7 +37,7 @@ function turn_on_gpu {
   echo 'Waiting 1 second'
   execute "sleep 1"
 
-  if [[ ! -d /sys/bus/pci/devices/${DEVICE_BUS_ID} ]]; then
+  if [[ ! -d "/sys/bus/pci/devices/${DEVICE_BUS_ID}" ]]; then
     echo 'Rescanning PCI devices'
     execute "sudo tee /sys/bus/pci/rescan <<<1"
     echo "Waiting ${BUS_RESCAN_WAIT_SEC} second for rescan"
@@ -76,7 +75,8 @@ fi
 
 # this is used by the systemd service to turn off the gpu at boot
 if [[ "$TURN_OFF_GPU_ONLY" == '1' ]]; then
-  turn_off_gpu && exit 0
+  turn_off_gpu
+  exit 0
 fi
 
 if [[ $EUID -eq 0 ]]; then
@@ -85,26 +85,24 @@ if [[ $EUID -eq 0 ]]; then
 fi
 
 # calculate current VT
-LVT=`fgconsole`
+LVT="$(fgconsole)"
 
 # calculate first usable display
-XNUM="-1"
-SOCK="something"
-while [[ ! -z "$SOCK" ]]
+XNUM=0
+while [[ -e "/tmp/.X11-unix/X$XNUM" ]]
 do
   XNUM=$(( $XNUM + 1 ))
-  SOCK=$(ls -A -1 /tmp/.X11-unix | grep "X$XNUM" )
 done
 
 NEWDISP=":$XNUM"
 
-if [[ ! -z "$*" ]] # generate exec line if arguments are given
+if [[ -n "$*" ]] # generate exec line if arguments are given
 then
   # test if executable exists in path
-  if [[ -x "$(which $1 2> /dev/null)" ]]
+  if [[ -x "$(which "$1" 2> /dev/null)" ]]
   then
     # generate exec line
-    EXECL="$(which $1)"
+    EXECL="$(which "$1")"
   # test if executable exists on disk
   elif [[ -e "$(realpath "$1")" ]]
   then
@@ -133,7 +131,7 @@ fi
 load_modules
 
 # ---------- EXECUTING COMMAND --------
-execute ${COMMAND}
+execute "${COMMAND}"
 
 # ---------- UNLOADING MODULES --------
 unload_modules
