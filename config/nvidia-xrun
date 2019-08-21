@@ -19,11 +19,14 @@ CONTROLLER_BUS_ID=0000:00:01.0
 # Bus ID of the graphic card
 DEVICE_BUS_ID=0000:01:00.0
 
-# Seconds to wait before turning on the card after PCI devices rescan
-BUS_RESCAN_WAIT_SEC=1
-
 # Ordered list of modules to load before running the command
-MODULES_LOAD=(nvidia nvidia_uvm nvidia_modeset "nvidia_drm modeset=1")
+# >>>>> ORIGINAL
+#MODULES_LOAD=(nvidia nvidia_uvm nvidia_modeset "nvidia_drm modeset=1")
+
+# >>>>> MASSKONFUZION: "nvidia_drm modeset=1" seems to cause sporadic general
+# protection faults on my machine. At a minimum, perhaps the "modeset=1"
+# option can be documented as a parameter to tweak?
+MODULES_LOAD=(nvidia nvidia_uvm nvidia_modeset nvidia_drm)
 
 # Ordered list of modules to unload after the command exits
 MODULES_UNLOAD=(nvidia_drm nvidia_modeset nvidia_uvm nvidia)
