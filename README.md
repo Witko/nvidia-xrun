@@ -67,7 +67,7 @@ able to find both the ids in the output of `lshw`: the PCIe controller is
 usually displayed right before the graphic card.
 
 ## Automatically run window manager
-For convenience you can create `nano ~/.nvidia-xinitrc` and put there your favourite window manager:
+For convenience you can create `nano ~/.config/X11/nvidia-xinitrc` and put there your favourite window manager:
 
     if [ $# -gt 0 ]; then
         $*
