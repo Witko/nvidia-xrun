@@ -19,34 +19,44 @@ function execute {
 }
 
 function turn_off_gpu {
-  if [[ "$REMOVE_DEVICE" == '1' ]]; then
-    echo 'Removing Nvidia bus from the kernel'
-    execute "sudo tee /sys/bus/pci/devices/${DEVICE_BUS_ID}/remove <<<1"
+  if [[ "$USE_BBSWITCH" == '1' ]]; then
+    echo 'Turning off GPU using bbswitch '
+    execute "sudo tee /proc/acpi/bbswitch <<<'OFF'"
   else
-    echo 'Enabling powersave for the graphic card'
-    execute "sudo tee /sys/bus/pci/devices/${DEVICE_BUS_ID}/power/control <<<auto"
-  fi
+    if [[ "$REMOVE_DEVICE" == '1' ]]; then
+      echo 'Removing Nvidia bus from the kernel'
+      execute "sudo tee /sys/bus/pci/devices/${DEVICE_BUS_ID}/remove <<<1"
+    else
+      echo 'Enabling powersave for the graphic card'
+      execute "sudo tee /sys/bus/pci/devices/${DEVICE_BUS_ID}/power/control <<<auto"
+    fi
 
-  echo 'Enabling powersave for the PCIe controller'
-  execute "sudo tee /sys/bus/pci/devices/${CONTROLLER_BUS_ID}/power/control <<<auto"
+    echo 'Enabling powersave for the PCIe controller'
+    execute "sudo tee /sys/bus/pci/devices/${CONTROLLER_BUS_ID}/power/control <<<auto"
+  fi
 }
 
 function turn_on_gpu {
-  echo 'Turning the PCIe controller on to allow card rescan'
-  execute "sudo tee /sys/bus/pci/devices/${CONTROLLER_BUS_ID}/power/control <<<on"
+  if [[ "$USE_BBSWITCH" == '1' ]]; then
+    echo 'Turning on GPU using bbswitch '
+    execute "sudo tee /proc/acpi/bbswitch <<<'ON'"
+  else
+    echo 'Turning the PCIe controller on to allow card rescan'
+    execute "sudo tee /sys/bus/pci/devices/${CONTROLLER_BUS_ID}/power/control <<<on"
 
-  echo 'Waiting 1 second'
-  execute "sleep 1"
+    echo 'Waiting 1 second'
+    execute "sleep 1"
 
-  if [[ ! -d /sys/bus/pci/devices/${DEVICE_BUS_ID} ]]; then
-    echo 'Rescanning PCI devices'
-    execute "sudo tee /sys/bus/pci/rescan <<<1"
-    echo "Waiting ${BUS_RESCAN_WAIT_SEC} second for rescan"
-    execute "sleep ${BUS_RESCAN_WAIT_SEC}"
+    if [[ ! -d /sys/bus/pci/devices/${DEVICE_BUS_ID} ]]; then
+      echo 'Rescanning PCI devices'
+      execute "sudo tee /sys/bus/pci/rescan <<<1"
+      echo "Waiting ${BUS_RESCAN_WAIT_SEC} second for rescan"
+      execute "sleep ${BUS_RESCAN_WAIT_SEC}"
+    fi
+
+    echo 'Turning the card on'
+    execute "sudo tee /sys/bus/pci/devices/${DEVICE_BUS_ID}/power/control <<<on"
   fi
-
-  echo 'Turning the card on'
-  execute "sudo tee /sys/bus/pci/devices/${DEVICE_BUS_ID}/power/control <<<on"
 }
 
 function load_modules {

@@ -95,6 +95,7 @@ sudo dnf install nvidia-xrun
 ```
 
 ## Troubleshooting
+
 ### Steam issues
 Yes unfortunately running Steam directly with nvidia-xrun does not work well - I recommend to use some window manager like openbox.
 
@@ -105,6 +106,10 @@ To fix, you can change the DPI settings in `~/.Xresources (~/.Xdefaults)` file b
 ```
 Xft.dpi: 192
 ```
+
+### Crashing during when unloading nvidia modules
+
+Try set `USE_BBSWITCH=1`, you'll have to install `bbswitch` manually as well.
 
 ### `nouveau` driver conflict
 `nouveau` driver should be automatically blacklisted by `nvidia` but in case it is not, `nvidia` might not get access to GPU. Then you need to manually blacklist `nouveau` following Arch wiki https://wiki.archlinux.org/index.php/kernel_modules#Blacklisting.
