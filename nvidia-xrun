@@ -65,6 +65,11 @@ function unload_modules {
   done
 }
 
+function bbswitch_off {
+  echo "Turning card OFF with bbswitch"
+  execute "sudo tee /proc/acpi/bbswitch <<<OFF"
+}
+
 if [[ "$1" == "-d" ]]
   then
     DRY_RUN=1
@@ -137,6 +142,10 @@ execute ${COMMAND}
 
 # ---------- UNLOADING MODULES --------
 unload_modules
+
+if [[ "$USE_BBSWITCH" == '1' ]]; then
+  bbswitch_off
+fi
 
 # --------- TURNING OFF GPU ----------
 if [[ "$ENABLE_PM" == '1' ]]; then
