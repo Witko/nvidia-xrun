@@ -11,7 +11,15 @@ ENABLE_PM=1
 # and some other programs tend to load the nvidia module if they detect a
 # nvidia card in the system, and when the module is loaded the card can't save
 # power.
+#
+# USE_BBSWITCH option below can override the behavior of this option.
 REMOVE_DEVICE=1
+
+# When enabled, nvidia-xrun will toggle power for the card using bbswitch.
+# This *requires* bbswitch to be installed.
+#
+# Note that this option overrides REMOVE_DEVICE paramter above when enabled.
+USE_BBSWITCH=0
 
 # Bus ID of the PCI express controller
 CONTROLLER_BUS_ID=0000:00:01.0
