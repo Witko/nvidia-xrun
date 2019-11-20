@@ -113,6 +113,12 @@ To fix, you can change the DPI settings in `~/.Xresources (~/.Xdefaults)` file b
 Xft.dpi: 192
 ```
 
+### `nvidia-xrun` fails to unload modules
+
+This can happen if you switch between tty sessions while nvidia-xrun is active. Usually switching to another tty, running `nvidia-xrun` and closing it without switching to another tty should exit gracefully.
+
+If you currently have such an issue, you can avoid restarting the system by logging out of all X sessions (perhaps `sudo systemctl restart gdm` or whatever) and then manually unloading the modules and turning off GPU.
+
 ### `nouveau` driver conflict
 `nouveau` driver should be automatically blacklisted by `nvidia` but in case it is not, `nvidia` might not get access to GPU. Then you need to manually blacklist `nouveau` following Arch wiki https://wiki.archlinux.org/index.php/kernel_modules#Blacklisting.
 
