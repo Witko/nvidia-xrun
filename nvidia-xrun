@@ -1,12 +1,17 @@
 #!/usr/bin/env bash
 
+# avoid tee to print in the stdout
+TEE='tee > /dev/null'
+VERBOSE=0
 DRY_RUN=0
+
 function printHelp {
   echo "Utility to run games and applications in separate X on discrete Nvidia graphic card"
   echo "Usage: "
   echo "nvidia-xrun [<options>] [<app>]"
   echo "Options: "
   echo "  -d    Dry run - prints the final command but does not execute it"
+  echo "  -v    Verbose - verbose output"
 }
 
 function execute {
@@ -18,41 +23,47 @@ function execute {
   fi
 }
 
+function say {
+  if [[ "$VERBOSE" == '1' ]]; then
+    echo $*
+  fi
+}
+
 function turn_off_gpu {
   if [[ "$REMOVE_DEVICE" == '1' ]]; then
-    echo 'Removing Nvidia bus from the kernel'
-    execute "sudo tee /sys/bus/pci/devices/${DEVICE_BUS_ID}/remove <<<1"
+    say 'Removing Nvidia bus from the kernel'
+    execute "sudo $TEE /sys/bus/pci/devices/${DEVICE_BUS_ID}/remove <<<1"
   else
-    echo 'Enabling powersave for the graphic card'
-    execute "sudo tee /sys/bus/pci/devices/${DEVICE_BUS_ID}/power/control <<<auto"
+    say 'Enabling powersave for the graphic card'
+    execute "sudo $TEE /sys/bus/pci/devices/${DEVICE_BUS_ID}/power/control <<<auto"
   fi
 
-  echo 'Enabling powersave for the PCIe controller'
-  execute "sudo tee /sys/bus/pci/devices/${CONTROLLER_BUS_ID}/power/control <<<auto"
+  say 'Enabling powersave for the PCIe controller'
+  execute "sudo $TEE /sys/bus/pci/devices/${CONTROLLER_BUS_ID}/power/control <<<auto"
 }
 
 function turn_on_gpu {
-  echo 'Turning the PCIe controller on to allow card rescan'
-  execute "sudo tee /sys/bus/pci/devices/${CONTROLLER_BUS_ID}/power/control <<<on"
+  say 'Turning the PCIe controller on to allow card rescan'
+  execute "sudo $TEE /sys/bus/pci/devices/${CONTROLLER_BUS_ID}/power/control <<<on"
 
-  echo 'Waiting 1 second'
+  say 'Waiting 1 second'
   execute "sleep 1"
 
   if [[ ! -d /sys/bus/pci/devices/${DEVICE_BUS_ID} ]]; then
-    echo 'Rescanning PCI devices'
-    execute "sudo tee /sys/bus/pci/rescan <<<1"
-    echo "Waiting ${BUS_RESCAN_WAIT_SEC} second for rescan"
+    say 'Rescanning PCI devices'
+    execute "sudo $TEE /sys/bus/pci/rescan <<<1"
+    say "Waiting ${BUS_RESCAN_WAIT_SEC} second for rescan"
     execute "sleep ${BUS_RESCAN_WAIT_SEC}"
   fi
 
-  echo 'Turning the card on'
-  execute "sudo tee /sys/bus/pci/devices/${DEVICE_BUS_ID}/power/control <<<on"
+  say 'Turning the card on'
+  execute "sudo $TEE /sys/bus/pci/devices/${DEVICE_BUS_ID}/power/control <<<on"
 }
 
 function load_modules {
   for module in "${MODULES_LOAD[@]}"
   do
-    echo "Loading module ${module}"
+    say "Loading module ${module}"
     execute "sudo modprobe ${module}"
   done
 }
@@ -60,16 +71,23 @@ function load_modules {
 function unload_modules {
   for module in "${MODULES_UNLOAD[@]}"
   do
-    echo "Unloading module ${module}"
+    say "Unloading module ${module}"
     execute "sudo modprobe -r ${module}"
   done
 }
 
-if [[ "$1" == "-d" ]]
-  then
-    DRY_RUN=1
-    shift 1
-fi
+# parse command line flags
+while [[ "${1:0:1}" == "-" ]]; do
+  case "$1" in
+    -d)
+      DRY_RUN=1 ;;
+    -v)
+      VERBOSE=1 ;;
+    -*)
+      printHelp && exit 1 ;;
+  esac
+  shift 1
+done
 
 # load config file
 . /etc/default/nvidia-xrun
