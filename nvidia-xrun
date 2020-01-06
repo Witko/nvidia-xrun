@@ -41,8 +41,27 @@ function turn_on_gpu {
   if [[ ! -d /sys/bus/pci/devices/${DEVICE_BUS_ID} ]]; then
     echo 'Rescanning PCI devices'
     execute "sudo tee /sys/bus/pci/rescan <<<1"
-    echo "Waiting ${BUS_RESCAN_WAIT_SEC} second for rescan"
-    execute "sleep ${BUS_RESCAN_WAIT_SEC}"
+
+    # >>>>> MASSKONFUZION: This comment for review; feel free to delete:
+    # This change proposes to do away with BUS_RESCAN_WAIT_SEC, in favor of
+    # waiting for the NVIDIA GPU to appear in lspci. The code, as written,
+    # assumes the GPU will appear. But perhaps a more robust solution (not
+    # implemented as of yet) would be to fail if the GPU does not appear
+    # after a given timeout interval.
+    if [[ ${DRY_RUN} -eq 1 ]]; then
+        echo '>> Dry run. Waiting for NVIDIA video device'
+    else
+        echo 'Waiting for NVIDIA video device'
+        RESULT="1"
+        while [[ ${RESULT} -ne 0 ]]; do
+            echo -n '.'
+            lspci | grep -v Audio | grep NVIDIA > /dev/null
+            RESULT=$?
+            sleep 1
+        done
+        echo 'Woo-hoo! Got it :fist pump:'
+        lspci | grep -v Audio | grep NVIDIA
+    fi
   fi
 
   echo 'Turning the card on'
@@ -54,6 +73,7 @@ function load_modules {
   do
     echo "Loading module ${module}"
     execute "sudo modprobe ${module}"
+    sleep 1
   done
 }
 
@@ -62,6 +82,7 @@ function unload_modules {
   do
     echo "Unloading module ${module}"
     execute "sudo modprobe -r ${module}"
+    sleep 1
   done
 }
 
