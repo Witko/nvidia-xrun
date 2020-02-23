@@ -18,51 +18,30 @@ function execute {
   fi
 }
 
-function turn_off_gpu {
-  if [[ "$REMOVE_DEVICE" == '1' ]]; then
-    echo 'Removing Nvidia bus from the kernel'
-    execute "sudo tee /sys/bus/pci/devices/${DEVICE_BUS_ID}/remove <<<1"
-  else
-    echo 'Enabling powersave for the graphic card'
-    execute "sudo tee /sys/bus/pci/devices/${DEVICE_BUS_ID}/power/control <<<auto"
-  fi
+CURDIR=$(dirname "$(realpath $0)")
 
-  echo 'Enabling powersave for the PCIe controller'
-  execute "sudo tee /sys/bus/pci/devices/${CONTROLLER_BUS_ID}/power/control <<<auto"
+function turn_off_gpu {
+  ${CURDIR}/nvidia-xrun-util turn_off_gpu ${DRY_RUN}
 }
 
 function turn_on_gpu {
-  echo 'Turning the PCIe controller on to allow card rescan'
-  execute "sudo tee /sys/bus/pci/devices/${CONTROLLER_BUS_ID}/power/control <<<on"
+  ${CURDIR}/nvidia-xrun-util turn_on_gpu ${DRY_RUN}
+}
 
-  echo 'Waiting 1 second'
-  execute "sleep 1"
+function force_turn_off_gpu {
+  ${CURDIR}/nvidia-xrun-util force_turn_off_gpu ${DRY_RUN}
+}
 
-  if [[ ! -d /sys/bus/pci/devices/${DEVICE_BUS_ID} ]]; then
-    echo 'Rescanning PCI devices'
-    execute "sudo tee /sys/bus/pci/rescan <<<1"
-    echo "Waiting ${BUS_RESCAN_WAIT_SEC} second for rescan"
-    execute "sleep ${BUS_RESCAN_WAIT_SEC}"
-  fi
-
-  echo 'Turning the card on'
-  execute "sudo tee /sys/bus/pci/devices/${DEVICE_BUS_ID}/power/control <<<on"
+function force_turn_on_gpu {
+  ${CURDIR}/nvidia-xrun-util force_turn_on_gpu ${DRY_RUN}
 }
 
 function load_modules {
-  for module in "${MODULES_LOAD[@]}"
-  do
-    echo "Loading module ${module}"
-    execute "sudo modprobe ${module}"
-  done
+  ${CURDIR}/nvidia-xrun-util load_modules ${DRY_RUN}
 }
 
 function unload_modules {
-  for module in "${MODULES_UNLOAD[@]}"
-  do
-    echo "Unloading module ${module}"
-    execute "sudo modprobe -r ${module}"
-  done
+  ${CURDIR}/nvidia-xrun-util unload_modules ${DRY_RUN}
 }
 
 if [[ "$1" == "-d" ]]
@@ -71,12 +50,10 @@ if [[ "$1" == "-d" ]]
     shift 1
 fi
 
-# load config file
-. /etc/default/nvidia-xrun
-
 # this is used by the systemd service to turn off the gpu at boot
 if [[ "$TURN_OFF_GPU_ONLY" == '1' ]]; then
-  turn_off_gpu && exit 0
+  force_turn_off_gpu
+  exit 0
 fi
 
 if [[ $EUID -eq 0 ]]; then
@@ -125,9 +102,7 @@ EXECL="/etc/X11/xinit/nvidia-xinitrc \"$EXECL\""
 COMMAND="xinit $EXECL -- $NEWDISP vt$LVT -nolisten tcp -br -config nvidia-xorg.conf -configdir nvidia-xorg.conf.d"
 
 # --------- TURNING ON GPU -----------
-if [[ "$ENABLE_PM" == '1' ]]; then
-  turn_on_gpu
-fi
+turn_on_gpu
 
 # ---------- LOADING MODULES ----------
 load_modules
@@ -139,6 +114,4 @@ execute ${COMMAND}
 unload_modules
 
 # --------- TURNING OFF GPU ----------
-if [[ "$ENABLE_PM" == '1' ]]; then
-  turn_off_gpu
-fi
+turn_off_gpu
