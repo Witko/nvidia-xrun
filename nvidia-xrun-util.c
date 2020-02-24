@@ -286,8 +286,10 @@ void load_module(const char *module) {
   }
 
   char* args[64] = {NULL};
-  args[0] = strdup("/usr/bin/modprobe");
-  parse_values(module, args + 1, sizeof(args)/sizeof(args[0]) - 2);
+  args[0] = strdup("/usr/bin/timeout");
+  args[1] = strdup("10");
+  args[2] = strdup("/usr/bin/modprobe");
+  parse_values(module, args + 3, sizeof(args)/sizeof(args[0]) - 4);
   execvp(args[0], args);
   free_values(args, sizeof(args)/sizeof(args[0]));
   exit(EXIT_FAILURE);
@@ -312,7 +314,7 @@ void unload_module(const char *module) {
     return;
   }
 
-  execl("/usr/bin/modprobe", "/usr/bin/modprobe", "-r", module, NULL);
+  execl("/usr/bin/timeout", "/usr/bin/timeout", "10", "/usr/bin/modprobe", "-r", module, NULL);
   exit(EXIT_FAILURE);
 }
 
