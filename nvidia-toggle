@@ -1,0 +1,95 @@
+#!/bin/bash
+# nvidia-toggle [-d] (on | off | gpu-off)
+
+DRY_RUN=0
+if [[ $EUID -ne 0 ]]; then
+   (>&2 echo "This script must be run as root")
+   exit 1
+fi
+
+function execute {
+  if [ ${DRY_RUN} -eq 1 ]
+    then
+    echo ">>Dry run. Command: $*"
+  else
+    eval $*
+  fi
+}
+
+function die {
+    (>&2 echo $@)
+    exit 1
+}
+
+function turn_off_gpu {
+  if [[ "$REMOVE_DEVICE" == '1' ]]; then
+    echo 'Removing Nvidia bus from the kernel'
+    execute "tee /sys/bus/pci/devices/${DEVICE_BUS_ID}/remove <<<1"
+  else
+    echo 'Enabling powersave for the graphic card'
+    execute "tee /sys/bus/pci/devices/${DEVICE_BUS_ID}/power/control <<<auto"
+  fi
+
+  echo 'Enabling powersave for the PCIe controller'
+  execute "tee /sys/bus/pci/devices/${CONTROLLER_BUS_ID}/power/control <<<auto"
+}
+
+function turn_on_gpu {
+  echo 'Turning the PCIe controller on to allow card rescan'
+  execute "tee /sys/bus/pci/devices/${CONTROLLER_BUS_ID}/power/control <<<on"
+
+  echo 'Waiting 1 second'
+  execute "sleep 1"
+
+  if [[ ! -d /sys/bus/pci/devices/${DEVICE_BUS_ID} ]]; then
+    echo 'Rescanning PCI devices'
+    execute "tee /sys/bus/pci/rescan <<<1"
+    echo "Waiting ${BUS_RESCAN_WAIT_SEC} second for rescan"
+    execute "sleep ${BUS_RESCAN_WAIT_SEC}"
+  fi
+
+  echo 'Turning the card on'
+  execute "tee /sys/bus/pci/devices/${DEVICE_BUS_ID}/power/control <<<on"
+}
+
+function load_modules {
+  for module in "${MODULES_LOAD[@]}"
+  do
+    echo "Loading module ${module}"
+    execute "modprobe ${module}"
+  done
+}
+
+function unload_modules {
+  for module in "${MODULES_UNLOAD[@]}"
+  do
+    echo "Unloading module ${module}"
+    execute "modprobe -r ${module}"
+  done
+}
+
+if [ "$1" == "-d" ]
+  then
+    DRY_RUN=1
+    shift 1
+fi
+
+case $1 in
+on)
+    if [[ "$ENABLE_PM" == '1' ]]; then
+      turn_on_gpu
+    fi
+    load_modules
+    ;;
+off)
+    unload_modules
+    ;&
+gpu-off)
+    if [[ "$ENABLE_PM" == '1' ]]; then
+      turn_off_gpu
+    fi
+    ;;
+*)
+    die "nvidia-toggle [-d] (on | off | gpu-off)"
+    ;;
+esac

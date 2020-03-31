@@ -18,51 +18,9 @@ function execute {
   fi
 }
 
-function turn_off_gpu {
-  if [[ "$REMOVE_DEVICE" == '1' ]]; then
-    echo 'Removing Nvidia bus from the kernel'
-    execute "sudo tee /sys/bus/pci/devices/${DEVICE_BUS_ID}/remove <<<1"
-  else
-    echo 'Enabling powersave for the graphic card'
-    execute "sudo tee /sys/bus/pci/devices/${DEVICE_BUS_ID}/power/control <<<auto"
-  fi
-
-  echo 'Enabling powersave for the PCIe controller'
-  execute "sudo tee /sys/bus/pci/devices/${CONTROLLER_BUS_ID}/power/control <<<auto"
-}
-
-function turn_on_gpu {
-  echo 'Turning the PCIe controller on to allow card rescan'
-  execute "sudo tee /sys/bus/pci/devices/${CONTROLLER_BUS_ID}/power/control <<<on"
-
-  echo 'Waiting 1 second'
-  execute "sleep 1"
-
-  if [[ ! -d /sys/bus/pci/devices/${DEVICE_BUS_ID} ]]; then
-    echo 'Rescanning PCI devices'
-    execute "sudo tee /sys/bus/pci/rescan <<<1"
-    echo "Waiting ${BUS_RESCAN_WAIT_SEC} second for rescan"
-    execute "sleep ${BUS_RESCAN_WAIT_SEC}"
-  fi
-
-  echo 'Turning the card on'
-  execute "sudo tee /sys/bus/pci/devices/${DEVICE_BUS_ID}/power/control <<<on"
-}
-
-function load_modules {
-  for module in "${MODULES_LOAD[@]}"
-  do
-    echo "Loading module ${module}"
-    execute "sudo modprobe ${module}"
-  done
-}
-
-function unload_modules {
-  for module in "${MODULES_UNLOAD[@]}"
-  do
-    echo "Unloading module ${module}"
-    execute "sudo modprobe -r ${module}"
-  done
+function die {
+    (>&2 echo $@)
+    exit 1
 }
 
 if [[ "$1" == "-d" ]]
@@ -76,7 +34,8 @@ fi
 
 # this is used by the systemd service to turn off the gpu at boot
 if [[ "$TURN_OFF_GPU_ONLY" == '1' ]]; then
-  turn_off_gpu && exit 0
+  execute "sudo nvidia-toggle gpu-off" || die "Could not turn gpu off"
+  exit 0
 fi
 
 if [[ $EUID -eq 0 ]]; then
@@ -124,21 +83,13 @@ EXECL="/etc/X11/xinit/nvidia-xinitrc \"$EXECL\""
 
 COMMAND="xinit $EXECL -- $NEWDISP vt$LVT -nolisten tcp -br -config nvidia-xorg.conf -configdir nvidia-xorg.conf.d"
 
-# --------- TURNING ON GPU -----------
-if [[ "$ENABLE_PM" == '1' ]]; then
-  turn_on_gpu
-fi
-
-# ---------- LOADING MODULES ----------
-load_modules
+# ---------- TURNING ON GPU -----------
+echo 'Loading nvidia'
+execute "sudo nvidia-toggle on" || die "Could not load nvidia"
 
 # ---------- EXECUTING COMMAND --------
-execute ${COMMAND}
-
-# ---------- UNLOADING MODULES --------
-unload_modules
+execute ${COMMAND} || die "Could not execute command"
 
 # --------- TURNING OFF GPU ----------
-if [[ "$ENABLE_PM" == '1' ]]; then
-  turn_off_gpu
-fi
+echo 'Unloading nvidia'
+execute "sudo nvidia-toggle off" || die "Could not unload nvidia"
