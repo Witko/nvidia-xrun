@@ -8,7 +8,6 @@ It started with a revelation that bumblebee in current state offers very poor pe
   1. run `nvidia-xrun [app]`
   1. enjoy
 
-Currently sudo is required as the script needs to wake up GPU, modprobe the nvidia driver and perform cleanup afterwards.
 
 The systemd service can be used to completely remove the card from the kernel
 device tree (so that it won't even show in `lspci` output), and this will
@@ -22,6 +21,17 @@ The service can be enabled with this command:
 ```
 
 When the nvidia-xrun command is used, the device is added again to the tree so that the nvidia module can be loaded properly: nvidia-xrun will remove the device and enable PM again after the application terminates.
+
+### Passwordless `sudo`
+Whitelisting `nvidia-toggle` in your sudoer's file allows you to use `nvidia-xrun` without entering your password:
+
+```
+%users ALL=(root) NOPASSWD:/usr/bin/nvidia-toggle
+```
+
+...where `/usr/bin/nvidia-toggle` is the full path to the `nvidia-toggle` script.
+
+Note: it is a good practice to ensure binaries/scripts/etc. that are whitelisted for passwordless `sudo` are owned by root.
 
 ## Structure
 * **nvidia-xrun** - uses following dir structure:

@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-DRY_RUN=0
 function printHelp {
   echo "Utility to run games and applications in separate X on discrete Nvidia graphic card"
   echo "Usage: "
@@ -9,136 +8,79 @@ function printHelp {
   echo "  -d    Dry run - prints the final command but does not execute it"
 }
 
-function execute {
-  if [[ ${DRY_RUN} -eq 1 ]]
-    then
-    echo ">>Dry run. Command: $*"
-  else
-    eval $*
-  fi
-}
-
-function turn_off_gpu {
-  if [[ "$REMOVE_DEVICE" == '1' ]]; then
-    echo 'Removing Nvidia bus from the kernel'
-    execute "sudo tee /sys/bus/pci/devices/${DEVICE_BUS_ID}/remove <<<1"
-  else
-    echo 'Enabling powersave for the graphic card'
-    execute "sudo tee /sys/bus/pci/devices/${DEVICE_BUS_ID}/power/control <<<auto"
-  fi
-
-  echo 'Enabling powersave for the PCIe controller'
-  execute "sudo tee /sys/bus/pci/devices/${CONTROLLER_BUS_ID}/power/control <<<auto"
-}
-
-function turn_on_gpu {
-  echo 'Turning the PCIe controller on to allow card rescan'
-  execute "sudo tee /sys/bus/pci/devices/${CONTROLLER_BUS_ID}/power/control <<<on"
-
-  echo 'Waiting 1 second'
-  execute "sleep 1"
-
-  if [[ ! -d /sys/bus/pci/devices/${DEVICE_BUS_ID} ]]; then
-    echo 'Rescanning PCI devices'
-    execute "sudo tee /sys/bus/pci/rescan <<<1"
-    echo "Waiting ${BUS_RESCAN_WAIT_SEC} second for rescan"
-    execute "sleep ${BUS_RESCAN_WAIT_SEC}"
-  fi
-
-  echo 'Turning the card on'
-  execute "sudo tee /sys/bus/pci/devices/${DEVICE_BUS_ID}/power/control <<<on"
-}
-
-function load_modules {
-  for module in "${MODULES_LOAD[@]}"
-  do
-    echo "Loading module ${module}"
-    execute "sudo modprobe ${module}"
-  done
-}
-
-function unload_modules {
-  for module in "${MODULES_UNLOAD[@]}"
-  do
-    echo "Unloading module ${module}"
-    execute "sudo modprobe -r ${module}"
-  done
-}
-
-if [[ "$1" == "-d" ]]
-  then
+DRY_RUN=0
+if [ "$1" == "-d" ]; then
     DRY_RUN=1
     shift 1
 fi
 
+function say { echo ">>Dry run. Command: $*"; }
+if [ $DRY_RUN -eq 1 ]; then
+    execute='say'
+else
+    execute='eval'
+fi
+
+function die {
+    (>&2 echo "$@")
+    exit 1
+}
+
 # load config file
 . /etc/default/nvidia-xrun
 
-# this is used by the systemd service to turn off the gpu at boot
-if [[ "$TURN_OFF_GPU_ONLY" == '1' ]]; then
-  turn_off_gpu && exit 0
-fi
-
 if [[ $EUID -eq 0 ]]; then
-   echo "This script must not be run as root unless TURN_OFF_GPU_ONLY=1 is set" >&2
+   echo "This script must not be run as root" >&2
    exit 1
 fi
 
 # calculate current VT
-LVT=`fgconsole`
+LVT="vt$(fgconsole)"
 
 # calculate first usable display
-XNUM="-1"
-SOCK="something"
-while [[ ! -z "$SOCK" ]]
+XNUM=0
+SOCK=/tmp/.X11-unix/X$XNUM
+while [[ -e "$SOCK" ]]
 do
-  XNUM=$(( $XNUM + 1 ))
-  SOCK=$(ls -A -1 /tmp/.X11-unix | grep "X$XNUM" )
+  XNUM=$(( XNUM + 1 ))
+  SOCK=/tmp/.X11-unix/X$XNUM
 done
 
 NEWDISP=":$XNUM"
 
-if [[ ! -z "$*" ]] # generate exec line if arguments are given
+if [[ -n "$*" ]] # generate exec line if arguments are given
 then
   # test if executable exists in path
-  if [[ -x "$(which $1 2> /dev/null)" ]]
+  if [[ -x "$(command -v "$1" 2> /dev/null)" ]]
   then
     # generate exec line
-    EXECL="$(which $1)"
+    CMD="$(command -v "$1")"
   # test if executable exists on disk
   elif [[ -e "$(realpath "$1")" ]]
   then
     # generate exec line
-    EXECL="$(realpath "$1")"
+    CMD="$(realpath "$1")"
   else
     echo "$1: No such executable!"
     exit 1
   fi
   shift 1
-  EXECL="$EXECL $*"
+  ARGV=("$CMD" "$@")
 else # prepare to start new X sessions if no arguments passed
-  EXECL=""
+  ARGV=()
 fi
 
-EXECL="/etc/X11/xinit/nvidia-xinitrc \"$EXECL\""
+CLIENT=(/etc/X11/xinit/nvidia-xinitrc "${ARGV[*]}")
+SERVER=("$NEWDISP" "$LVT" -nolisten tcp -br -config nvidia-xorg.conf -configdir nvidia-xorg.conf.d)
+COMMAND=(xinit "${CLIENT[@]}" -- "${SERVER[@]}")
 
-COMMAND="xinit $EXECL -- $NEWDISP vt$LVT -nolisten tcp -br -config nvidia-xorg.conf -configdir nvidia-xorg.conf.d"
-
-# --------- TURNING ON GPU -----------
-if [[ "$ENABLE_PM" == '1' ]]; then
-  turn_on_gpu
-fi
-
-# ---------- LOADING MODULES ----------
-load_modules
+# ---------- TURNING ON GPU -----------
+echo 'Loading nvidia'
+$execute "sudo nvidia-toggle on" || die "Could not load nvidia"
 
 # ---------- EXECUTING COMMAND --------
-execute ${COMMAND}
-
-# ---------- UNLOADING MODULES --------
-unload_modules
+$execute "${COMMAND[*]}" || die "Could not execute command"
 
 # --------- TURNING OFF GPU ----------
-if [[ "$ENABLE_PM" == '1' ]]; then
-  turn_off_gpu
-fi
+echo 'Unloading nvidia'
+$execute "sudo nvidia-toggle off" || die "Could not unload nvidia"
