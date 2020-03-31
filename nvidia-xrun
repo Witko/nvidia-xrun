@@ -29,14 +29,8 @@ function die {
 # load config file
 . /etc/default/nvidia-xrun
 
-# this is used by the systemd service to turn off the gpu at boot
-if [[ "$TURN_OFF_GPU_ONLY" == '1' ]]; then
-  $execute "sudo nvidia-toggle gpu-off" || die "Could not turn gpu off"
-  exit 0
-fi
-
 if [[ $EUID -eq 0 ]]; then
-   echo "This script must not be run as root unless TURN_OFF_GPU_ONLY=1 is set" >&2
+   echo "This script must not be run as root" >&2
    exit 1
 fi
 
