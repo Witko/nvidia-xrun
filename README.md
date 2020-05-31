@@ -100,6 +100,21 @@ With this you do not need to specify the app and you can simply run:
 
     nvidia-xrun
 
+## Run graphically from gdm
+  1. For convenience you can create `sudo nano /usr/share/xsession/[your session].desktop` and put there your favourite window    manager:
+```
+    [Desktop Entry]
+Encoding=UTF-8
+Name=[the name in the gdm session list]
+Comment=[comment in the gdm session list]
+Type=Application
+Exec=/usr/bin/nvidia-xrun-util start_from_X --actualVt=1 --exec="[put it your session script]"
+```
+  2. Restart gdm `sudo systemctl restart gdm`
+  3. Now, you will be able to select your new nvidia-xrun session in the gdm list when the computer start. 
+
+In fact, gdm will spawn a new X server who run the `nvidia-xrun-util start_from_X` command and stop. (that make computer switch back to tty1, however, because the nvidia-xrun-util process wait 1 second before starting, the computer will just after switch to the tty8). The argument `--actualVt=1` make the script switch back the tty1 (who contains the gdm session manager) instead of the tty where the script was started.
+
 ## Troubleshooting
 ### Steam issues
 Yes unfortunately running Steam directly with nvidia-xrun does not work well - I recommend to use some window manager like openbox.
@@ -129,7 +144,8 @@ Check https://wiki.archlinux.org/index.php/Vulkan
 
 ### Xorg cannot start in Debian
 You should comment all "files" section in /etc/X11/nvidia-xorg.conf like this:
-`#Section "Files"
+```
+#Section "Files"
 #  ModulePath "/usr/lib/nvidia"
 #  ModulePath "/usr/lib32/nvidia"
 #  ModulePath "/usr/lib32/nvidia/xorg/modules"
@@ -137,7 +153,8 @@ You should comment all "files" section in /etc/X11/nvidia-xorg.conf like this:
 #  ModulePath "/usr/lib64/nvidia/xorg/modules"
 #  ModulePath "/usr/lib64/nvidia/xorg"
 #  ModulePath "/usr/lib64/xorg/modules"
-#EndSection`
+#EndSection
+```
 
 ### cannot unload "nvidia-drm" before nvidia-xrun
 I don't know why, in my debian loading "nvidia_drm modeset=1" cause nvidia_drm cannot be unloaded without kill all X server (even intel graphic X server). More if the script try to remove the nvidia card at this moment, it cause a kernel bug who cause shutdown infinite loop (you must make a forced outage) and you will not be able to kill the "nvidia-xrun-util turn_off_gpu" process.
