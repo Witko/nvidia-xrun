@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+CHVT=$1; shift
 
 DRY_RUN=0
 function printHelp {
@@ -115,3 +116,5 @@ unload_modules
 
 # --------- TURNING OFF GPU ----------
 turn_off_gpu
+
+chvt $CHVT
