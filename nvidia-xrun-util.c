@@ -11,27 +11,36 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include <linux/limits.h>
+#include <sys/ioctl.h>
+#include <linux/vt.h>
+
 bool dry_run = false;
 
-void trim_pair(char *str, int (*begin_match)(int c), int (*end_match)(int c)) {
+void trim_pair(char *str, int (*begin_match)(int c), int (*end_match)(int c))
+{
   char *begin = str;
   char *end;
 
-  if (str == NULL) {
+  if (str == NULL)
+  {
     return;
   }
 
-  while (begin_match(*begin)) {
+  while (begin_match(*begin))
+  {
     begin++;
   }
 
-  if (*begin == '\0') {
+  if (*begin == '\0')
+  {
     str[0] = '\0';
     return;
   }
 
   end = begin + strlen(begin) - 1;
-  while (end > begin && end_match(*end)) {
+  while (end > begin && end_match(*end))
+  {
     end--;
   }
 
@@ -51,42 +60,55 @@ void trim_space(char *str) { trim_pair(str, &isspace, &isspace); }
 void trim_quote(char *str) { trim_pair(str, &is_quote, &is_quote); }
 void trim_array(char *str) { trim_pair(str, &is_array_begin, &is_array_end); }
 
-void parse_values(const char *data, char *values[], int count) {
+void parse_values(const char *data, char *values[], int count)
+{
   int index = 0;
-  for (const char *end, *begin = data; *begin; begin = end) {
+  for (const char *end, *begin = data; *begin; begin = end)
+  {
     // Skip leading spaces.
-    while (isspace(*begin)) {
+    while (isspace(*begin))
+    {
       ++begin;
     }
 
-    if (is_quote(*begin)) {
+    if (is_quote(*begin))
+    {
       ++begin;
       end = begin;
-      while (*end) {
-        if (is_quote(*end)) {
+      while (*end)
+      {
+        if (is_quote(*end))
+        {
           break;
         }
         ++end;
       }
-      if (index >= count) {
+      if (index >= count)
+      {
         fprintf(stderr, "warn: values(%s) exceeded max count(%d)\n", data,
                 count);
         return;
       }
       values[index] = strndup(begin, end - begin);
       ++index;
-      if (*end) {
+      if (*end)
+      {
         ++end;
       }
-    } else {
+    }
+    else
+    {
       end = begin;
-      while (*end) {
-        if (isspace(*end)) {
+      while (*end)
+      {
+        if (isspace(*end))
+        {
           break;
         }
         ++end;
       }
-      if (index >= count) {
+      if (index >= count)
+      {
         fprintf(stderr, "warn: values(%s) exceeded max count(%d)\n", data,
                 count);
         return;
@@ -97,16 +119,20 @@ void parse_values(const char *data, char *values[], int count) {
   }
 }
 
-void free_values(char *values[], int count) {
-  for (int i = 0; i < count; ++i) {
-    if (values[i]) {
+void free_values(char *values[], int count)
+{
+  for (int i = 0; i < count; ++i)
+  {
+    if (values[i])
+    {
       free(values[i]);
       values[i] = NULL;
     }
   }
 }
 
-typedef struct {
+typedef struct
+{
   bool enable_pm;
   bool remove_device;
   char device_bus_id[64];
@@ -116,52 +142,72 @@ typedef struct {
   char *modules_unload[64];
 } Conf;
 
-bool conf_load(Conf *conf, const char *file) {
+bool conf_load(Conf *conf, const char *file)
+{
   FILE *f = fopen(file, "r");
-  if (f == NULL) {
+  if (f == NULL)
+  {
     fprintf(stderr, "open config file %s failed: %d\n", file, errno);
     return false;
   }
   char line[1024] = {'\0'};
-  while (fgets(line, sizeof(line), f)) {
+  while (fgets(line, sizeof(line), f))
+  {
     trim_space(line);
-    if (line[0] == '#') {
+    if (line[0] == '#')
+    {
       continue; // Skip comment line
     }
     char *value = strchr(line, '=');
-    if (value == NULL) {
+    if (value == NULL)
+    {
       continue;
     }
     *value = '\0';
     ++value;
     trim_space(line);
     trim_space(value);
-    if (strcmp(line, "ENABLE_PM") == 0) {
+    if (strcmp(line, "ENABLE_PM") == 0)
+    {
       trim_quote(value);
       conf->enable_pm = (value[0] == '1');
-    } else if (strcmp(line, "REMOVE_DEVICE") == 0) {
+    }
+    else if (strcmp(line, "REMOVE_DEVICE") == 0)
+    {
       trim_quote(value);
       conf->remove_device = (value[0] == '1');
-    } else if (strcmp(line, "CONTROLLER_BUS_ID") == 0) {
+    }
+    else if (strcmp(line, "CONTROLLER_BUS_ID") == 0)
+    {
       trim_quote(value);
       snprintf(conf->controller_bus_id, sizeof(conf->controller_bus_id), "%s",
                value);
-    } else if (strcmp(line, "DEVICE_BUS_ID") == 0) {
+    }
+    else if (strcmp(line, "DEVICE_BUS_ID") == 0)
+    {
       trim_quote(value);
       snprintf(conf->device_bus_id, sizeof(conf->device_bus_id), "%s", value);
-    } else if (strcmp(line, "BUS_RESCAN_WAIT_SEC") == 0) {
+    }
+    else if (strcmp(line, "BUS_RESCAN_WAIT_SEC") == 0)
+    {
       trim_quote(value);
       conf->bus_rescan_wait_sec = atoi(value);
-    } else if (strcmp(line, "MODULES_LOAD") == 0) {
+    }
+    else if (strcmp(line, "MODULES_LOAD") == 0)
+    {
       trim_array(value);
       parse_values(value, conf->modules_load,
                    sizeof(conf->modules_load) / sizeof(conf->modules_load[0]));
-    } else if (strcmp(line, "MODULES_UNLOAD") == 0) {
+    }
+    else if (strcmp(line, "MODULES_UNLOAD") == 0)
+    {
       trim_array(value);
       parse_values(value, conf->modules_unload,
                    sizeof(conf->modules_unload) /
                        sizeof(conf->modules_unload[0]));
-    } else {
+    }
+    else
+    {
       fprintf(stderr, "ignore: unknown config item '%s'\n", line);
     }
   }
@@ -169,12 +215,14 @@ bool conf_load(Conf *conf, const char *file) {
   return true;
 }
 
-void conf_free(Conf *conf) {
-  free_values(conf->modules_load, sizeof(conf->modules_load)/sizeof(conf->modules_load[0]));
-  free_values(conf->modules_unload, sizeof(conf->modules_unload)/sizeof(conf->modules_unload[0]));
+void conf_free(Conf *conf)
+{
+  free_values(conf->modules_load, sizeof(conf->modules_load) / sizeof(conf->modules_load[0]));
+  free_values(conf->modules_unload, sizeof(conf->modules_unload) / sizeof(conf->modules_unload[0]));
 }
 
-void conf_dump(const Conf *conf) {
+void conf_dump(const Conf *conf)
+{
   printf("enable_pm\n\t%d\n"
          "remove_device\n\t%d\n"
          "device_bus_id\n\t%s\n"
@@ -185,41 +233,52 @@ void conf_dump(const Conf *conf) {
   printf("modules_load\n");
   int i;
   for (i = 0; i < sizeof(conf->modules_load) / sizeof(conf->modules_load[0]);
-       ++i) {
-    if (conf->modules_load[i]) {
+       ++i)
+  {
+    if (conf->modules_load[i])
+    {
       printf("\t%s\n", conf->modules_load[i]);
     }
   }
   printf("modules_unload\n");
   for (i = 0;
        i < sizeof(conf->modules_unload) / sizeof(conf->modules_unload[0]);
-       ++i) {
-    if (conf->modules_unload[i]) {
+       ++i)
+  {
+    if (conf->modules_unload[i])
+    {
       printf("\t%s\n", conf->modules_unload[i]);
     }
   }
 }
 
-void update_file(const char *file, const char *str) {
-  if (dry_run) {
+void update_file(const char *file, const char *str)
+{
+  if (dry_run)
+  {
     printf(">>Dry run. Command: echo '%s' > %s\n", str, file);
     return;
   }
   int fd = open(file, O_WRONLY);
-  if (fd != -1) {
+  if (fd != -1)
+  {
     write(fd, str, strlen(str));
     close(fd);
   }
 }
 
-void turn_off_gpu(const Conf *conf) {
+void turn_off_gpu(const Conf *conf)
+{
   char file[PATH_MAX] = {'\0'};
-  if (conf->remove_device) {
+  if (conf->remove_device)
+  {
     puts("Removing Nvidia bus from the kernel");
     snprintf(file, sizeof(file), "/sys/bus/pci/devices/%s/remove",
              conf->device_bus_id);
     update_file(file, "1");
-  } else {
+  }
+  else
+  {
     puts("Enabling powersave for the graphic card");
     snprintf(file, sizeof(file), "/sys/bus/pci/devices/%s/power/control",
              conf->device_bus_id);
@@ -232,7 +291,8 @@ void turn_off_gpu(const Conf *conf) {
   update_file(file, "auto");
 }
 
-void turn_on_gpu(const Conf *conf) {
+void turn_on_gpu(const Conf *conf)
+{
   puts("Turning the PCIe controller on to allow card rescan");
   char file[PATH_MAX] = {'\0'};
   snprintf(file, sizeof(file), "/sys/bus/pci/devices/%s/power/control",
@@ -240,21 +300,28 @@ void turn_on_gpu(const Conf *conf) {
   update_file(file, "on");
 
   puts("Waiting 1 second");
-  if (dry_run) {
+  if (dry_run)
+  {
     printf(">>Dry run. Command: sleep 1\n");
-  } else {
+  }
+  else
+  {
     sleep(1);
   }
 
   snprintf(file, sizeof(file), "/sys/bus/pci/devices/%s", conf->device_bus_id);
   struct stat st;
-  if (stat(file, &st) != 0 || !S_ISDIR(st.st_mode)) {
+  if (stat(file, &st) != 0 || !S_ISDIR(st.st_mode))
+  {
     puts("Rescanning PCI devices");
     update_file("/sys/bus/pci/rescan", "1");
     printf("Waiting %d second for rescan\n", conf->bus_rescan_wait_sec);
-    if (dry_run) {
+    if (dry_run)
+    {
       printf(">>Dry run. Command: sleep %d\n", conf->bus_rescan_wait_sec);
-    } else {
+    }
+    else
+    {
       sleep(conf->bus_rescan_wait_sec);
     }
   }
@@ -265,83 +332,98 @@ void turn_on_gpu(const Conf *conf) {
   update_file(file, "on");
 }
 
-void load_module(const char *module) {
+void load_module(const char *module)
+{
   printf("Loading module %s\n", module);
 
-  if (dry_run) {
+  if (dry_run)
+  {
     printf(">>Dry run. Command: modprobe '%s'\n", module);
     return;
   }
 
   pid_t pid = fork();
 
-  if (pid == -1) {
+  if (pid == -1)
+  {
     perror("fork");
     return;
   }
 
-  if (pid > 0) {
+  if (pid > 0)
+  {
     waitpid(pid, NULL, 0);
     return;
   }
 
-  char* args[64] = {NULL};
+  char *args[64] = {NULL};
   args[0] = strdup("/usr/bin/timeout");
   args[1] = strdup("10");
-  args[2] = strdup("/usr/bin/modprobe");
-  parse_values(module, args + 3, sizeof(args)/sizeof(args[0]) - 4);
+  args[2] = strdup("/usr/sbin/modprobe");
+  parse_values(module, args + 3, sizeof(args) / sizeof(args[0]) - 4);
   execvp(args[0], args);
-  free_values(args, sizeof(args)/sizeof(args[0]));
+  free_values(args, sizeof(args) / sizeof(args[0]));
   exit(EXIT_FAILURE);
 }
 
-void unload_module(const char *module) {
+void unload_module(const char *module)
+{
   printf("Unloading module %s\n", module);
-  if (dry_run) {
+  if (dry_run)
+  {
     printf(">>Dry run. Command: modprobe -r '%s'\n", module);
     return;
   }
 
   pid_t pid = fork();
 
-  if (pid == -1) {
+  if (pid == -1)
+  {
     perror("fork");
     return;
   }
 
-  if (pid > 0) {
+  if (pid > 0)
+  {
     waitpid(pid, NULL, 0);
     return;
   }
 
-  execl("/usr/bin/timeout", "/usr/bin/timeout", "10", "/usr/bin/modprobe", "-r", module, NULL);
+  execl("/usr/bin/timeout", "/usr/bin/timeout", "10", "/usr/sbin/modprobe", "-r", module, NULL);
   exit(EXIT_FAILURE);
 }
 
-void load_modules(const Conf *conf) {
+void load_modules(const Conf *conf)
+{
   int i;
 
   for (i = 0; i < sizeof(conf->modules_load) / sizeof(conf->modules_load[0]);
-       ++i) {
-    if (conf->modules_load[i]) {
+       ++i)
+  {
+    if (conf->modules_load[i])
+    {
       load_module(conf->modules_load[i]);
     }
   }
 }
 
-void unload_modules(const Conf *conf) {
+void unload_modules(const Conf *conf)
+{
   int i;
 
   for (i = 0;
        i < sizeof(conf->modules_unload) / sizeof(conf->modules_unload[0]);
-       ++i) {
-    if (conf->modules_unload[i]) {
+       ++i)
+  {
+    if (conf->modules_unload[i])
+    {
       unload_module(conf->modules_unload[i]);
     }
   }
 }
 
-void usage(int argc, char *argv[]) {
+void usage(int argc, char *argv[])
+{
   fprintf(stderr,
           "Usage: %s "
           "<turn_off_gpu|turn_on_gpu|force_turn_off_gpu|force_turn_on_gpu|load_"
@@ -349,54 +431,149 @@ void usage(int argc, char *argv[]) {
           argv[0]);
 }
 
-int main(int argc, char *argv[]) {
+int active_tty_number()
+{
+  long tty = -1;
+  long fd = 0;
+  int result = 0;
+  struct vt_stat ttyinfo;
+
+  fd = open("/dev/tty0", O_RDWR | O_NOCTTY);
+  if (fd < 0)
+  {
+    perror("Error opening /dev/tty0");
+    return -1;
+  }
+  result = ioctl(fd, VT_GETSTATE, &ttyinfo);
+  if (result == 0)
+  {
+    tty = ttyinfo.v_active;
+    printf("Active tty: %ld\n", tty);
+    return tty;
+  }
+  else
+  {
+    perror("ioctl failed");
+    return -1;
+  }
+}
+
+void start_from_X(int argc, char *argv[])
+{
+  int actualVt;
+  char command[PATH_MAX];
+  char exec[PATH_MAX];
+
+  actualVt = -1;
+  memset(exec, 0, sizeof(exec));
+  for (size_t i = 2; i < argc; i++)
+  {
+    if (!strncmp(argv[i], "--actualVt=", 11))
+    {
+      argv[i] += 11;
+      actualVt = atoi(argv[i]);
+      printf("actualVt number=%d\n", actualVt);
+    }
+    else if (!strncmp(argv[i], "--exec=", 7))
+    {
+      argv[i] += 7;
+      strncpy(exec, argv[i], PATH_MAX - 1);
+      printf("exec=%s\n", exec, argv[i]);
+    }
+  }
+
+  if (actualVt < 0)
+  {
+    if ((actualVt = active_tty_number()) < 0)
+      exit(EXIT_FAILURE);
+  }
+
+  snprintf(command, sizeof(command),
+           "export PATH=\"/home/user/.local/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games\"; sleep 1 && chvt 8 && nvidia-xrun %d %s",
+           actualVt, exec);
+
+  execl("/usr/bin/systemd-run", "/usr/bin/systemd-run", "--property", "PAMName=login",
+        "--property", "User=user",
+        "--property", "StandardInput=tty",
+        "--property", "TTYPath=/dev/tty8",
+        "sh", "-c", command, NULL);
+}
+
+int main(int argc, char *argv[])
+{
   Conf conf = {'\0'};
-  if (!conf_load(&conf, "/etc/default/nvidia-xrun")) {
+  if (!conf_load(&conf, "/etc/default/nvidia-xrun"))
+  {
     return EXIT_FAILURE;
   }
 
-  if (argc > 1 && argc < 4) {
+  if (argc > 1 && argc < 5)
+  {
     dry_run = (argc > 2 && strcmp(argv[2], "1") == 0);
-    if (!dry_run) {
-      if (setuid(0) == -1) {
+    if (!dry_run)
+    {
+      if (setuid(0) == -1)
+      {
         perror("setuid");
         return EXIT_FAILURE;
       }
-      if (setgid(0) == -1) {
+      if (setgid(0) == -1)
+      {
         perror("setgid");
         return EXIT_FAILURE;
       }
     }
 
-    if (strcmp(argv[1], "turn_off_gpu") == 0) {
-      if (conf.enable_pm) {
+    if (strcmp(argv[1], "turn_off_gpu") == 0)
+    {
+      if (conf.enable_pm)
+      {
         turn_off_gpu(&conf);
       }
       return 0;
-    } else if (strcmp(argv[1], "turn_on_gpu") == 0) {
-      if (conf.enable_pm) {
+    }
+    else if (strcmp(argv[1], "turn_on_gpu") == 0)
+    {
+      if (conf.enable_pm)
+      {
         turn_on_gpu(&conf);
       }
       return 0;
-    } else if (strcmp(argv[1], "force_turn_off_gpu") == 0) {
+    }
+    else if (strcmp(argv[1], "force_turn_off_gpu") == 0)
+    {
       turn_off_gpu(&conf);
       return 0;
-    } else if (strcmp(argv[1], "force_turn_on_gpu") == 0) {
+    }
+    else if (strcmp(argv[1], "force_turn_on_gpu") == 0)
+    {
       turn_on_gpu(&conf);
       return 0;
-    } else if (strcmp(argv[1], "load_modules") == 0) {
+    }
+    else if (strcmp(argv[1], "load_modules") == 0)
+    {
       load_modules(&conf);
       return 0;
-    } else if (strcmp(argv[1], "unload_modules") == 0) {
+    }
+    else if (strcmp(argv[1], "unload_modules") == 0)
+    {
       unload_modules(&conf);
       return 0;
-    } else if (strcmp(argv[1], "dump_conf") == 0) {
+    }
+    else if (strcmp(argv[1], "dump_conf") == 0)
+    {
       conf_dump(&conf);
       return 0;
     }
+    else if (strcmp(argv[1], "start_from_X") == 0)
+    {
+      printf("start nvidia-xrun from existing X server\n");
+      start_from_X(argc, argv);
+      return 0;
+    }
+
+    usage(argc, argv);
+
+    return EXIT_FAILURE;
   }
-
-  usage(argc, argv);
-
-  return EXIT_FAILURE;
 }
