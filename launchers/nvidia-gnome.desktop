@@ -1,0 +1,6 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=GNOME (nvidia-xrun)
+Comment=Log in Gnome X11 (running with nvidia-xrun)
+Type=Application
+Exec=/usr/bin/nvidia-xrun-util start_from_X --actualVt=1 --exec=gnome-session
