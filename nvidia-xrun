@@ -50,10 +50,12 @@ function turn_on_gpu {
 }
 
 function load_modules {
+  execute "sudo nvidia-modprobe"
+  execute "sudo nvidia-persistenced"
   for module in "${MODULES_LOAD[@]}"
   do
     echo "Loading module ${module}"
-    execute "sudo modprobe ${module}"
+    execute "sudo modprobe -v -s ${module}"
   done
 }
 
@@ -61,7 +63,7 @@ function unload_modules {
   for module in "${MODULES_UNLOAD[@]}"
   do
     echo "Unloading module ${module}"
-    execute "sudo modprobe -r ${module}"
+    execute "sudo modprobe -v -s -r ${module}"
   done
 }
 
