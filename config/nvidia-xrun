@@ -16,6 +16,14 @@ REMOVE_DEVICE=1
 # Bus ID of the PCI express controller
 CONTROLLER_BUS_ID=0000:00:01.0
 
+# Turning the PCIe controller on when the HD audio controller is turned off
+# can lead to hung tee processes, hung kernel tasks and total system lockups.
+# If HDA_CONTROLLER_BUS_ID is set to the Bus ID of the NVIDIA HD audio controller
+# it will be turned on before the PCIe controller is.
+#
+# Bus ID of the HD audio controller
+#HDA_CONTROLLER_BUS_ID=0000:01:00.1
+
 # Bus ID of the graphic card
 DEVICE_BUS_ID=0000:01:00.0
 

@@ -27,11 +27,24 @@ function turn_off_gpu {
     execute "sudo tee /sys/bus/pci/devices/${DEVICE_BUS_ID}/power/control <<<auto"
   fi
 
+  if [ -n "$HDA_CONTROLLER_BUS_ID" ]; then
+    echo 'Enabling powersave for the HD audio controller'
+    execute "sudo tee /sys/bus/pci/devices/${HDA_CONTROLLER_BUS_ID}/power/control <<<auto"
+  fi
+
   echo 'Enabling powersave for the PCIe controller'
   execute "sudo tee /sys/bus/pci/devices/${CONTROLLER_BUS_ID}/power/control <<<auto"
 }
 
 function turn_on_gpu {
+
+  if [ -n "$HDA_CONTROLLER_BUS_ID" ]; then
+    echo 'Turning on the HD audio controller:'
+    echo "  This may throw a pci_err: \"can't change power state [...] (config space inaccessible)\""
+    echo "  But it can avoid some lockups. "
+    execute "sudo tee /sys/bus/pci/devices/${HDA_CONTROLLER_BUS_ID}/power/control <<<on"
+  fi
+
   echo 'Turning the PCIe controller on to allow card rescan'
   execute "sudo tee /sys/bus/pci/devices/${CONTROLLER_BUS_ID}/power/control <<<on"
 
