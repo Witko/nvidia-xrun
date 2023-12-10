@@ -1,14 +1,22 @@
+**IMPORTANT: Please do not use anymore. Nvida has released for some years new proprietary drivers that works well. So this project is not usefull anymore.**
+That's why it has been archived.
+
 # nvidia-xrun
 These utility scripts aim to make the life easier for nvidia cards users.
 It started with a revelation that bumblebee in current state offers very poor performance. This solution offers a bit more complicated procedure but offers a full GPU utilization(in terms of linux drivers)
 
 ## Usage:
   1. switch to free tty
-  1. login
-  1. run `nvidia-xrun [app]`
-  1. enjoy
+  2. login
+  3. run `nvidia-xrun [return tty] [app]`
+  4. enjoy
 
-Currently sudo is required as the script needs to wake up GPU, modprobe the nvidia driver and perform cleanup afterwards.
+## Usage from existing X session:
+  1. open a terminal emulator (as Xterm)
+  2. run `nvidia-xrun-util start_from_X` you can specify an app with `--exec="[app]"` or the tty number to switch before the nvidia X session finished with `--actualVt=[return tty]` (by default, it switch back to the actual tty, before the script was run)
+  3. enjoy
+  
+  **This version needs no sudo right for the current user**
 
 The systemd service can be used to completely remove the card from the kernel
 device tree (so that it won't even show in `lspci` output), and this will
@@ -25,17 +33,24 @@ When the nvidia-xrun command is used, the device is added again to the tree so t
 
 ## Structure
 * **nvidia-xrun** - uses following dir structure:
-* **/usr/bin/nvidia-xrun** - the executable script
+* **/usr/bin/nvidia-xrun** - the executable bash script
+* **/usr/bin/nvidia-xrun-util** - the executable binary contains all admin commands
 * **/etc/X11/nvidia-xorg.conf** - the main X confing file
 * **/etc/X11/xinit/nvidia-xinitrc** - xinitrc config file. Contains the setting of provider output source
 * **/etc/X11/xinit/nvidia-xinitrc.d** - custom xinitrc scripts directory
 * **/etc/X11/nvidia-xorg.conf.d** - custom X config directory
 * **/etc/systemd/system/nvidia-xrun-pm.service** systemd service
 * **/etc/default/nvidia-xrun** - nvidia-xrun config file
-* **/usr/share/xsessions/nvidia-xrun-openbox.desktop** - xsession file for openbox
-* **/usr/share/xsessions/nvidia-xrun-plasma.desktop** - xsession file for plasma
+* **[OPTIONAL] /usr/share/xsession/nvidia-gnome.desktop** - gnome-session entry using nvidia-xrun in the gdm login manager
 * **[OPTIONAL] $XDG_CONFIG_HOME/X11/nvidia-xinitrc** - user-level custom xinit script file. You can put here your favourite window manager for example
 
+## Modifications in this repository
+(I'm sorry for my bad english, I'm a french student)
+	This repository is a fork of the tangxinfa repository (branch "fix-no-sudo") who permit to use nvidia-xrun without sudo rights by separating all sudo commands in the binary "nidia-xrun-util" (run with setuid root).
+	I've modified the binary to start "nvidia-xrun" in a new user session in a new tty using **systemd-run** (https://unix.stackexchange.com/questions/554592/how-to-manually-run-init-start-a-xorg-server-on-a-different-vt-tty/554603#554603).
+	When the `nvidia-xrun-util start_from_X` command start, it wait one second before switch to the tty8 (to prevent swithing back to the tty1 at first session ending in gdm). After, it will run the nvidia-xrun command in the tty8 as user. When the session finished, it switch back to the previous tty or the tty specified by the user (`--actualVt=[tty number]`).
+	For the time, you cannot modify the tty opened by the `nvidia-xrun-util start_from_X` because it is hard coded. That means if you run the command twice, it will wait before the first nvidia X ending before starting a new one. (the classic  `nvidia-xrun` command is no affected because it run in the current tty)
+	**To make possible switching back to the previous tty, the nvidia-xrun command has been changed! You must specify the tty number before the app to execute like this `nvidia-xrun 1 xterm`**
 
 ## Setting the right bus id
 Usually the 1:0:0 bus is correct. If this is not your case(you can find out through lspci or bbswitch output mesages) you can create
@@ -88,18 +103,20 @@ With this you do not need to specify the app and you can simply run:
 
     nvidia-xrun
 
-## AUR Package
-The Arch Linux User Repository package can be found [here](https://aur.archlinux.org/packages/nvidia-xrun/).
-
-## COPR Repository for Enterprise Linux, Fedora, Mageia, and openSUSE
-The RPM packages and repository details for all supported distributions can be found on the [ekultails/nvidia-xrun](https://copr.fedorainfracloud.org/coprs/ekultails/nvidia-xrun/) COPR overview page.
-
-### Install (Enterprise Linux and Fedora)
-
+## Run graphically from gdm
+  1. For convenience you can create `sudo nano /usr/share/xsession/[your session].desktop` and put there your favourite window    manager:
 ```
-sudo dnf copr enable ekultails/nvidia-xrun
-sudo dnf install nvidia-xrun
+    [Desktop Entry]
+Encoding=UTF-8
+Name=[the name in the gdm session list]
+Comment=[comment in the gdm session list]
+Type=Application
+Exec=/usr/bin/nvidia-xrun-util start_from_X --actualVt=1 --exec="[put it your session script]"
 ```
+  2. Restart gdm `sudo systemctl restart gdm`
+  3. Now, you will be able to select your new nvidia-xrun session in the gdm list when the computer start. 
+
+In fact, gdm will spawn a new X server who run the `nvidia-xrun-util start_from_X` command and stop. (that make computer switch back to tty1, however, because the nvidia-xrun-util process wait 1 second before starting, the computer will just after switch to the tty8). The argument `--actualVt=1` make the script switch back the tty1 (who contains the gdm session manager) instead of the tty where the script was started.
 
 ## Troubleshooting
 ### Steam issues
@@ -127,3 +144,21 @@ In that case, you should add `--ignore-install` to `modprobe` calls in `nvidia-x
 Check https://wiki.archlinux.org/index.php/Vulkan
 * remove package vulkan-intel
 * set VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json
+
+### Xorg cannot start in Debian
+You should comment all "files" section in /etc/X11/nvidia-xorg.conf like this:
+```
+#Section "Files"
+#  ModulePath "/usr/lib/nvidia"
+#  ModulePath "/usr/lib32/nvidia"
+#  ModulePath "/usr/lib32/nvidia/xorg/modules"
+#  ModulePath "/usr/lib32/xorg/modules"
+#  ModulePath "/usr/lib64/nvidia/xorg/modules"
+#  ModulePath "/usr/lib64/nvidia/xorg"
+#  ModulePath "/usr/lib64/xorg/modules"
+#EndSection
+```
+
+### cannot unload "nvidia-drm" before nvidia-xrun
+I don't know why, in my debian loading "nvidia_drm modeset=1" cause nvidia_drm cannot be unloaded without kill all X server (even intel graphic X server). More if the script try to remove the nvidia card at this moment, it cause a kernel bug who cause shutdown infinite loop (you must make a forced outage) and you will not be able to kill the "nvidia-xrun-util turn_off_gpu" process.
+I must replace **"nvidia_drm modeset=1"** by **nvidia_drm** in /etc/default/nvidia-xrun
